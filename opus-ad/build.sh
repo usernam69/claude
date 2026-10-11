@@ -1,10 +1,16 @@
 #!/usr/bin/env bash
-# Builds the vertical (root) and landscape cuts from template.html + ad.js
-set -e
-cd "$(dirname "$0")"
-mk() { sed -e "s/__W__/$2/g; s/__H__/$3/g; s/__A__/$4/g; s/__B__/$5/g; s/__CF__/$6/g; s/__CM__/$7/g; s/__CP__/$8/g; s/__CW__/$9/g; s/__CG__/${10}/g" src/template.html > "$1/index.html"; }
-mk . 1080 1920 250 150 46 70 "26px 54px" 12 26
-mkdir -p landscape/assets landscape/audio
-cp -r assets/. landscape/assets/; cp ad.js landscape/; cp hyperframes.json meta.json package.json landscape/ 2>/dev/null || true
-[ -f audio/score.wav ] && cp audio/score.wav landscape/audio/
-mk landscape 1920 1080 230 140 44 56 "24px 52px" 11 24
+# Builds the two cuts of the ad from one template and one score.
+#   vertical/   1080x1920 (social)     landscape/  1920x1080
+set -euo pipefail
+here="$(cd "$(dirname "$0")" && pwd)"
+root="$(dirname "$here")"
+cut() { # name width height orient
+  local dir="$here/$1"
+  mkdir -p "$dir/audio"
+  sed -e "s/{{W}}/$2/g" -e "s/{{H}}/$3/g" -e "s/{{ORIENT}}/$4/g" "$here/src/index.template.html" > "$dir/index.html"
+  cp "$here/audio/score.wav" "$dir/audio/score.wav"
+  "$root/tools/sync-assets.sh" "opus-ad/$1" >/dev/null
+  echo "built $1 ($2x$3)"
+}
+cut vertical 1080 1920 v
+cut landscape 1920 1080 h

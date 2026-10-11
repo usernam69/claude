@@ -1,116 +1,179 @@
-// Clawd and the rocket — synthesized score + foley. 100 BPM (beat 0.6 s), C major.
-// Every effect is placed on the action timestamps used in scene.js.
+/* Clawd and the rocket: score and effects. 120 BPM. One beat = 0.5 s.
+ * The plucky score sits under the effects. Every clank, rip, hiss, fizzle, roar,
+ * break and burst is placed on the same time as its picture (see STORYBOARD.md).
+ */
 window.SCORE = {
-  duration: 22, seed: 9,
-  build(E) {
-    const B = 0.6, Q = B / 2;
-    const music = E.bus('music', { gain: 0.9, reverb: 0.25, irSec: 2.2, delay: 0.12, delayTime: 0.45 });
-    const bassB = E.bus('bass', { gain: 0.85 });
-    const perc = E.bus('perc', { gain: 0.55, reverb: 0.1 });
-    const foley = E.bus('foley', { gain: 1.0, reverb: 0.12, irSec: 1.2 });
-    const fx = E.bus('fx', { gain: 0.75, reverb: 0.3, irSec: 2.5 });
-    const boom = E.bus('boom', { gain: 0.9, reverb: 0.55, irSec: 4, irDecay: 2.5 });
-    const bells = E.bus('bells', { gain: 0.6, reverb: 0.5, irSec: 3.5, delay: 0.25, delayTime: 0.6 });
-    const r = E.rand;
+  seconds: 22,
+  tail: 0,
+  seed: 4242,
+  opts: { reverbWet: 0.26, rt60: 2.6, reverbSeconds: 3.2, delayTime: 0.5, delayFeedback: 0.3, delayWet: 0.2 },
+  build(S) {
+    const B = 0.5;
+    const at = (beat) => beat * B;
+    const ctx = S.ctx;
 
-    // instruments
-    const pluck = (t, n, v = 0.22, pan = 0) => E.voice(t, Synth.hz(n), 0.04, music, { type: 'triangle', v, a: 0.002, d: 0.32, s: 0, r: 0.25, cutoff: 2400, cutEnv: 3000, fdec: 0.1, pan });
-    const kal = (t, n, v = 0.1, pan = 0) => E.bell(t, n, bells, { v, dec: 0.9, pan });
-    const bassP = (t, n, v = 0.4) => E.voice(t, Synth.hz(n), 0.12, bassB, { type: 'triangle', v, a: 0.003, d: 0.35, s: 0.1, r: 0.15, cutoff: 900 });
-    const clank = (t, f = 1, v = 0.35, pan = 0) => { E.bell(t, Synth.midi(76 + 12 * Math.log2(f)), foley, { v: v * 0.6, dec: 0.5, pan }); E.bell(t, Synth.midi(83 + 12 * Math.log2(f)), foley, { v: v * 0.35, dec: 0.35, pan }); E.noiseHit(t, foley, { v: v * 0.8, dec: 0.06, type: 'bandpass', f: 3200 * f, q: 2, pan }); E.noiseHit(t, foley, { v: v * 0.5, dec: 0.12, type: 'lowpass', f: 600, pan }); };
-    const boing = (t, up = true, v = 0.18) => { const ctx = E.ctx, o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'sine';
-      o.frequency.setValueAtTime(up ? 300 : 900, t); o.frequency.exponentialRampToValueAtTime(up ? 900 : 300, t + 0.22);
-      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + 0.01); g.gain.setTargetAtTime(0, t + 0.12, 0.05); o.connect(g); g.connect(foley); o.start(t); o.stop(t + 0.5); };
-    const scritch = (t) => { for (let i = 0; i < 5; i++) E.noiseHit(t - 0.1 + i * 0.022, foley, { v: 0.25, dec: 0.02, type: 'bandpass', f: 2500 + i * 500, q: 1.2 });
-      E.noiseHit(t, foley, { v: 0.35, dec: 0.35, type: 'bandpass', f: 1400, q: 0.6, a: 0.03 }); };
-    const hiss = (t0, t1, v = 0.18) => { const ctx = E.ctx, s = ctx.createBufferSource(); s.buffer = E._noise; s.loop = true;
-      const f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 3500; const g = ctx.createGain();
-      g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(v, t0 + 0.05); g.gain.setValueAtTime(v, t1 - 0.05); g.gain.linearRampToValueAtTime(0, t1);
-      s.connect(f); f.connect(g); g.connect(foley); s.start(t0); s.stop(t1 + 0.1);
-      for (let t = t0; t < t1; t += 0.025 + r() * 0.05) E.noiseHit(t, foley, { v: 0.12 + r() * 0.15, dec: 0.006, type: 'highpass', f: 5000, pan: (r() - 0.5) * 0.4 }); };
-    const rattle = (t0, t1, v0, v1) => { for (let t = t0; t < t1; t += 0.032) { const p = (t - t0) / (t1 - t0); E.noiseHit(t, foley, { v: (v0 + (v1 - v0) * p) * (0.6 + r() * 0.4), dec: 0.02, type: 'bandpass', f: 2200 + r() * 1800, q: 3, pan: (r() - 0.5) * 0.3 }); } };
-    const tapeRip = (t0, dur) => { for (let t = t0; t < t0 + dur; t += 0.008) { const p = (t - t0) / dur; E.noiseHit(t, foley, { v: 0.16 * (0.5 + r()) * Math.sin(Math.PI * p), dec: 0.006, type: 'bandpass', f: 1500 + p * 3000, q: 1.5 }); } };
-    const step = (t, v = 0.12) => { E.noiseHit(t, foley, { v, dec: 0.025, type: 'bandpass', f: 900 + r() * 300, q: 2 }); };
-    const shaker = (t, v = 0.08) => E.noiseHit(t, perc, { v, dec: 0.04, type: 'highpass', f: 6000, a: 0.008 });
-    const block = (t, v = 0.15, f = 1200) => { E.voice(t, f, 0.01, perc, { type: 'sine', v, a: 0.001, d: 0.05, s: 0, r: 0.03 }); };
+    // Inline helpers for effects the synth does not cover directly.
+    // A tape rip: bright noise, very fast attack, a rough tail.
+    const rip = (t, dur, vel) => {
+      const ns = S.noiseSrc(t, dur + 0.05);
+      const hp = ctx.createBiquadFilter();
+      hp.type = 'highpass';
+      hp.frequency.value = 2200;
+      const bp = ctx.createBiquadFilter();
+      bp.type = 'bandpass';
+      bp.frequency.value = 4200;
+      bp.Q.value = 0.7;
+      const g = ctx.createGain();
+      S.adsr(g.gain, t, { peak: 0.7 * vel, a: 0.001, d: dur * 0.4, s: 0.1, hold: dur * 0.5, r: dur * 0.5 });
+      ns.connect(hp);
+      hp.connect(bp);
+      bp.connect(g);
+      S.route(g, { bus: 'fx', pan: 0.15, rev: 0.12 });
+    };
+    // A fuse hiss: band-passed noise that swells and then dies with the spark.
+    const hiss = (t0, t1, vel) => {
+      const ns = S.noiseSrc(t0, t1 - t0 + 0.1, { pink: true });
+      const bp = ctx.createBiquadFilter();
+      bp.type = 'bandpass';
+      bp.frequency.setValueAtTime(5200, t0);
+      bp.frequency.linearRampToValueAtTime(7400, t1);
+      bp.Q.value = 1.1;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(0.12 * vel, t0 + 0.25);
+      g.gain.setValueAtTime(0.12 * vel, t1 - 0.2);
+      g.gain.exponentialRampToValueAtTime(0.0001, t1);
+      ns.connect(bp);
+      bp.connect(g);
+      S.route(g, { bus: 'fx', pan: 0.25, rev: 0.2 });
+    };
+    // A crackle: a short cluster of ticks, like sparks.
+    const crackle = (t0, n, span, vel) => {
+      for (let i = 0; i < n; i++) {
+        const t = t0 + (span * i) / n + S.rnd(0, span / n);
+        S.tick(t, { f: 2600 + S.rnd(0, 2400), vel: vel * S.rnd(0.5, 1), pan: S.rnd(-0.4, 0.4) });
+      }
+    };
+    // The sad fizzle: a sawtooth sliding down, a lowpass closing, the hiss dying out.
+    const fizzle = (t, dur, vel) => {
+      const osc = ctx.createOscillator();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(420, t);
+      osc.frequency.exponentialRampToValueAtTime(150, t + dur);
+      const lp = ctx.createBiquadFilter();
+      lp.type = 'lowpass';
+      lp.Q.value = 2.5;
+      lp.frequency.setValueAtTime(2400, t);
+      lp.frequency.exponentialRampToValueAtTime(260, t + dur);
+      const g = ctx.createGain();
+      S.adsr(g.gain, t, { peak: 0.32 * vel, a: 0.01, d: dur * 0.6, s: 0.2, hold: dur, r: 0.2 });
+      osc.connect(lp);
+      lp.connect(g);
+      S.route(g, { bus: 'fx', pan: -0.2, rev: 0.25 });
+      osc.start(t);
+      osc.stop(t + dur + 0.3);
+      // the hiss dies out with the spark
+      hiss(t, t + dur * 0.7, 0.35);
+    };
 
-    // ---------------- A: playful build (0 – 8.4)
-    const chordsA = [['C3', 'E3', 'G3'], ['F2', 'A2', 'C3'], ['A2', 'C3', 'E3'], ['G2', 'B2', 'D3']];
-    const arp = [['C4', 'E4', 'G4', 'E4'], ['F4', 'A4', 'C5', 'A4'], ['A3', 'C4', 'E4', 'C4'], ['G3', 'B3', 'D4', 'B3']];
-    for (let bar = 0; bar < 4; bar++) { const t0 = bar * 4 * B; if (t0 >= 8.4) break;
-      for (let k = 0; k < 8; k++) { const t = t0 + k * Q; if (t >= 7.2 && bar === 3 && k > 3) break; if (t < 0.3) continue; pluck(t, arp[bar][k % 4], 0.12 + (k % 2 ? 0 : 0.04), k % 2 ? 0.2 : -0.2); }
-      for (let k = 0; k < 4; k++) { const t = t0 + k * B; if (t >= 8.4) break; bassP(t, chordsA[bar][0].replace(/\d/, (d) => d), k % 2 ? 0.25 : 0.38); }
+    /* ---------- score: plucky, under the effects ---------- */
+    // Shot 1 (0-2): D major motif, soft and bright
+    const motifA = [62, 69, 66, 69, 67, 71, 69, 66];
+    const motifB = [62, 69, 67, 74, 71, 69, 66, 67];
+    const bassRoot = (b0, b1, root) => {
+      for (let b = b0; b < b1; b += 2) S.bass(at(b), root, { dur: 0.7, vel: 0.5, cut: 500, cutLo: 160 });
+    };
+    // one bar = 2 s = 4 beats. Plucks on 8ths.
+    const pluckBar = (startBeat, notes, vel) => {
+      notes.forEach((m, i) => S.pluck(at(startBeat + i * 0.5), m, { dur: 0.22, vel, bright: 3000, dark: 900, rev: 0.25, dly: 0.12, pan: i % 2 ? 0.25 : -0.25 }));
+    };
+    pluckBar(0, motifA, 0.5);
+    pluckBar(4, motifB, 0.5);
+    bassRoot(0, 8, 38);
+
+    // Shot 2 (2-6): the build, plucks thicken, hats on 8ths
+    const hatsRange = (b0, b1) => { for (let b = b0; b < b1; b += 0.5) S.hat(at(b), { vel: 0.25, pan: (b % 1) ? 0.35 : -0.35 }); };
+    hatsRange(4, 12);
+    S.clap(at(8), { vel: 0.45 });
+    pluckBar(8, [62, 66, 69, 74, 71, 69, 67, 66], 0.46);
+    S.kick(at(8), { vel: 0.4, f0: 130, f1: 46, dec: 0.3 });
+    S.kick(at(10), { vel: 0.4, f0: 130, f1: 46, dec: 0.3 });
+    S.tick(at(4), { f: 2400, vel: 0.5, pan: -0.3 }); // can clank
+    S.tick(at(5), { f: 2000, vel: 0.5, pan: -0.3 }); // can clank on the bench
+    S.tick(at(6), { f: 1700, vel: 0.3, pan: -0.2 }); // tube set
+    S.tick(at(7), { f: 2800, vel: 0.35, pan: 0.1 }); // nose cone
+    rip(at(8), 0.18, 0.9); // tape rip for the fins
+
+    // the tube clunk, nose clink and fins: low wood and metal
+    S.kick(at(6), { vel: 0.55, f0: 110, f1: 52, dec: 0.2 });
+    S.click(at(7), { f: 2600, vel: 0.5, pan: 0.1 });
+    S.click(at(9), { f: 1400, vel: 0.2, pan: 0 });
+
+    // Shot 3 (6-8): fuse. Match scratch, spark, hiss.
+    rip(at(12), 0.12, 0.55);
+    crackle(at(13), 8, 0.4, 0.4);
+    hiss(at(13), at(16), 0.9);
+
+    // Shot 4 (8-10): fizzle, rocket tips over, slump thud
+    fizzle(at(16), 0.9, 1.0);
+    S.kick(at(17), { vel: 0.8, f0: 120, f1: 40, dec: 0.25 }); // rocket tip
+    S.sub(at(18), { dur: 0.7, f0: 48, f1: 24, vel: 0.9 }); // slump thud
+    pluckBar(16, [57, 62, 66, 62, 59, 57, 54, 57], 0.36); // quieter, minor shade
+    bassRoot(16, 20, 33);
+
+    // Shot 5 (10-12): the idea. Bell, arpeggio, pop.
+    [62, 66, 69, 74].forEach((m, i) => S.bell(at(20) + i * 0.25, m + 12, { dur: 0.9, vel: 0.55, pan: i % 2 ? 0.25 : -0.25, dly: 0.25 }));
+    S.bell(at(20), 74 + 12, { dur: 1.6, vel: 0.5, rev: 0.6, dly: 0.25 });
+    S.kick(at(21), { vel: 0.5, f0: 140, f1: 52, dec: 0.22 }); // pop takeoff
+    S.whoosh(at(23), 0.5, { dir: 1, vel: 0.5, lo: 400, hi: 4800 }); // whip pan to the shelf
+    pluckBar(20, [69, 74, 78, 81, 78, 74, 71, 69], 0.42);
+    bassRoot(20, 24, 38);
+
+    // Shot 6 (12-14): booster thump, tape rips, the rocket goes up
+    S.sub(at(24), { dur: 1.0, f0: 58, f1: 26, vel: 0.95 }); // booster thump
+    S.kick(at(24), { vel: 0.7, f0: 150, f1: 42, dec: 0.25 });
+    rip(at(25), 0.14, 0.8);
+    rip(at(26), 0.14, 0.8);
+    rip(at(26.8), 0.14, 0.8);
+    S.tick(at(27), { f: 1800, vel: 0.35, pan: 0.2 });
+    S.riser(at(26), at(27) - at(26), { f0: 300, f1: 2400, vel: 0.35, q: 1.1 }); // the lift
+    pluckBar(24, [62, 66, 69, 74, 71, 69, 66, 62], 0.4);
+    bassRoot(24, 28, 26);
+
+    // Shot 7 (14-16): relight, fuse hiss, anticipation, launch roar at 16.0
+    crackle(at(29), 8, 0.4, 0.45);
+    hiss(at(29), at(31.5), 0.9);
+    S.click(at(31), { f: 1100, vel: 0.2, pan: -0.2 }); // step back
+    S.riser(at(29), 2.0, { f0: 180, f1: 7000, vel: 0.6, q: 1.3 });
+    S.sub(at(32), { dur: 1.8, f0: 46, f1: 24, vel: 1 });
+    S.whoosh(at(32), 1.2, { dir: 1, vel: 0.9, lo: 200, hi: 5200 }); // roar
+    pluckBar(28, [66, 69, 74, 78, 74, 69, 66, 69], 0.4);
+    bassRoot(28, 32, 31);
+
+    // Shot 8 (16-17): skylight glass breaks at 17.0
+    hatsRange(32, 34);
+    S.impact(at(34), { vel: 0.5, tail: 1.2, subDur: 0.8 }); // hit as it rips up
+    for (let k = 0; k < 9; k++) {
+      const t = at(34) + k * 0.05;
+      S.tick(t, { f: 3300 + S.rnd(0, 2400), vel: 0.28 + S.rnd(0, 0.15), pan: S.rnd(-0.6, 0.6) });
     }
-    // melody from bar 2 (2.4)
-    const mel = [['C5', null, 'E5', 'G5', 'A5', 'G5', 'E5', null], ['D5', null, 'E5', 'C5', 'D5', null, null, null]];
-    mel.forEach((ph, i) => ph.forEach((n, k) => { if (n) kal(2.4 + i * 2.4 + k * Q, n, 0.09, 0.15); }));
-    for (let t = 1.2; t < 7.2; t += Q) block(t, (Math.round(t / Q) % 2 ? 0.05 : 0.09), 1500);
-    // foley: taps, parts landing, ta-da
-    [1.8, 2.4, 3.0].forEach((t, i) => clank(t, 0.9 + i * 0.05, 0.4, 0.15));
-    [[3.0, 3.6], [3.75, 4.2], [4.35, 4.8]].forEach(([a, b], i) => { boing(a + 0.05, true, 0.12); clank(b, 1.1 + i * 0.12, 0.35, 0.3); });
-    ['C5', 'E5', 'G5', 'C6'].forEach((n, i) => pluck(5.4 + i * 0.07, n, 0.18, (i - 1.5) * 0.2)); kal(5.68, 'C6', 0.1);
-    boing(5.38, true, 0.1);
-    // match + fuse 1
-    scritch(6.0); hiss(7.22, 8.42, 0.14);
-    E.pad(7.2, ['G2', 'D3', 'G3'], 1.8, music, { v: 0.05, a: 0.4, cutoff: 900, r: 0.3 });
-    // ---------------- tension → fizzle (8.4 – 10.2)
-    rattle(8.4, 9.0, 0.08, 0.25);
-    for (let t = 8.4; t < 9.0; t += 0.075) pluck(t, 'G4', 0.06 + (t - 8.4) * 0.12);
-    { const ctx = E.ctx, o = ctx.createOscillator(), g = ctx.createGain(), lfo = ctx.createOscillator(), lg = ctx.createGain(); // sad descending fizzle whistle
-      o.type = 'sine'; o.frequency.setValueAtTime(1300, 9.02); o.frequency.exponentialRampToValueAtTime(260, 9.85);
-      lfo.frequency.value = 9; lg.gain.value = 25; lfo.connect(lg); lg.connect(o.frequency);
-      g.gain.setValueAtTime(0, 9.0); g.gain.linearRampToValueAtTime(0.13, 9.06); g.gain.setTargetAtTime(0, 9.6, 0.12);
-      o.connect(g); g.connect(fx); o.start(9.0); lfo.start(9.0); o.stop(10.3); lfo.stop(10.3); }
-    E.noiseHit(9.0, foley, { v: 0.35, dec: 0.5, type: 'lowpass', f: 900, q: 0.4, a: 0.02 });
-    clank(9.66, 0.75, 0.45, 0.3); clank(9.82, 0.8, 0.2, 0.3); clank(9.92, 0.85, 0.1, 0.3);
-    // ---------------- slump: two sad notes (10.2 – 12.0)
-    E.pad(10.2, ['A2', 'C3', 'E3'], 1.7, music, { v: 0.05, a: 0.5, cutoff: 700, r: 0.4 });
-    pluck(10.2, 'C4', 0.16); pluck(10.8, 'A3', 0.16); pluck(11.4, 'Ab3', 0.1);
-    // ---------------- idea! (12.0)
-    E.bell(12.0, 'C6', bells, { v: 0.18, dec: 1.8 }); E.bell(12.0, 'G6', bells, { v: 0.1, dec: 1.8 }); E.bell(12.02, 'E7', bells, { v: 0.05, dec: 1.2 });
-    boing(11.95, true, 0.14);
-    E.whoosh(12.62, 0.36, fx, { v: 0.4, f0: 500, f1: 5000, pan0: -0.7, pan1: 0.7 });
-    // ---------------- C: busy fixing (12.6 – 16.2), brighter groove
-    const chordsC = [['C3', 'E3', 'G3'], ['F2', 'A2', 'C3'], ['G2', 'B2', 'D3']];
-    for (let t = 12.6; t < 16.2 - 0.01; t += Q) { const i = Math.round((t - 12.6) / Q); const bar = Math.min(2, Math.floor((t - 12.6) / (4 * B)));
-      pluck(t, arp[[0, 1, 3][bar]][i % 4], 0.11, i % 2 ? 0.25 : -0.25); shaker(t + Q / 2, 0.06); if (i % 2 === 0) bassP(t, chordsC[bar][0], 0.32); }
-    [['G5', 13.2], ['A5', 13.5], ['G5', 13.8], ['E5', 14.4], ['C5', 15.0], ['D5', 15.3], ['E5', 15.6]].forEach(([n, t]) => kal(t, n, 0.08));
-    // scrape while pushing the booster
-    for (let t = 13.2; t < 14.0; t += 0.02) E.noiseHit(t, foley, { v: 0.07 * (0.6 + r() * 0.4), dec: 0.02, type: 'bandpass', f: 700 + r() * 300, q: 2 });
-    for (let t = 13.25; t < 14.0; t += 0.1) step(t, 0.08);
-    clank(14.0, 0.7, 0.3, -0.1);
-    boing(14.25, true, 0.16); clank(14.55, 0.95, 0.45, 0.1);
-    tapeRip(14.6, 0.22); tapeRip(14.85, 0.22);
-    for (let t = 15.12; t < 15.55; t += 0.075) step(t, 0.1);
-    // match + fuse 2
-    scritch(15.6); hiss(16.2, 16.92, 0.16);
-    E.riser(16.2, 17.4, fx, { v: 0.32, f0: 300, f1: 7000, n0: 'G3', n1: 'G5' });
-    E.pad(16.2, ['G2', 'D3', 'G3', 'B3'], 1.2, music, { v: 0.06, a: 0.3, cutoff: 1400, r: 0.1 });
-    rattle(16.85, 17.4, 0.12, 0.4);
-    // ---------------- D: launch + fireworks (17.4 – 19.8)
-    { const ctx = E.ctx, s = ctx.createBufferSource(); s.buffer = E._noise; s.loop = true; const f = ctx.createBiquadFilter(); f.type = 'lowpass';
-      f.frequency.setValueAtTime(400, 17.4); f.frequency.exponentialRampToValueAtTime(2500, 17.6); f.frequency.exponentialRampToValueAtTime(500, 18.6);
-      const g = ctx.createGain(); g.gain.setValueAtTime(0, 17.38); g.gain.linearRampToValueAtTime(0.75, 17.45); g.gain.setTargetAtTime(0, 17.8, 0.35);
-      s.connect(f); f.connect(g); g.connect(fx); s.start(17.38); s.stop(19.2); }
-    E.subBoom(17.4, boom, { v: 0.8, f0: 70, f1: 30, dec: 1.4 });
-    // glass crash
-    { const T = 17.93; E.noiseHit(T, foley, { v: 0.5, dec: 0.4, type: 'highpass', f: 3000, q: 0.5 });
-      for (let i = 0; i < 22; i++) E.bell(T + r() * 0.6, Synth.midi(88 + Math.floor(r() * 14)), foley, { v: 0.04 + r() * 0.05, dec: 0.25, pan: (r() - 0.5) * 0.9 }); }
-    // bursts: boom + crackle
-    [[18.6, 1.0], [19.2, 0.85], [19.8, 0.8]].forEach(([T, v]) => {
-      E.subBoom(T, boom, { v: v * 0.9, f0: 95, f1: 32, dec: 1.8 }); E.noiseHit(T, boom, { v: v * 0.6, dec: 0.7, type: 'lowpass', f: 1800, q: 0.4 });
-      for (let i = 0; i < 40; i++) { const t = T + 0.7 + r() * 1.3; E.noiseHit(t, foley, { v: 0.05 + r() * 0.07, dec: 0.008, type: 'highpass', f: 4000, pan: (r() - 0.5) * 1.2 }); } });
-    // triumphant groove: C | G | Am F
-    const chordsD = [['C3', 'E3', 'G3', 'C4'], ['G2', 'B2', 'D3', 'G3'], ['A2', 'C3', 'E3', 'A3'], ['F2', 'A2', 'C3', 'F3']];
-    for (let i = 0; i < 4; i++) { const t = 17.4 + i * 2 * B; E.pad(t, chordsD[i], 2 * B, music, { v: 0.07, a: 0.02, cutoff: 2600, r: 0.3 }); bassP(t, chordsD[i][0], 0.42); bassP(t + B, chordsD[i][0], 0.3); }
-    for (let t = 17.4; t < 21.0; t += B) { E.kick(t, perc, { v: 0.9 }); }
-    for (let t = 18.0; t < 21.0; t += 2 * B) E.clap(t, perc, { v: 0.6 });
-    for (let t = 17.4; t < 21.0; t += Q) shaker(t + Q / 2, 0.08);
-    [['C5', 0], ['E5', 1], ['G5', 2], ['C6', 3], ['B5', 5], ['G5', 6], ['A5', 8], ['G5', 9], ['E5', 10], ['F5', 12], ['E5', 13], ['D5', 14], ['C5', 16]].forEach(([n, k]) => { const t = 17.4 + 1.2 + k * Q; if (t < 21.6) { kal(t, n, 0.11); pluck(t, n, 0.12); } });
-    // ---------------- E: outro (19.8 – 22): distant booms, happy hop, final chord
-    [[20.4, 0.35], [21.0, 0.3]].forEach(([T, v]) => E.subBoom(T, boom, { v, f0: 70, f1: 30, dec: 1.5 }));
-    boing(20.38, true, 0.12);
-    E.pad(21.0, ['C3', 'G3', 'C4', 'E4', 'D5'], 1.0, music, { v: 0.06, a: 0.05, d: 1, s: 0.6, cutoff: 2200, r: 0.6 });
-    ['C5', 'G5', 'E6'].forEach((n, i) => kal(21.0 + i * 0.1, n, 0.08));
+    rip(at(34), 0.3, 0.9);
+
+    // Shot 9 (18-20): three firework bursts
+    [37, 38, 39].forEach((b, bi) => {
+      S.impact(at(b), { vel: 0.7 - bi * 0.05, tail: 1.6, subDur: 0.6 });
+      for (let k = 0; k < 14; k++) {
+        const t = at(b) + 0.04 + k * 0.07 + S.rnd(0, 0.04);
+        S.tick(t, { f: 2500 + S.rnd(0, 3800), vel: 0.22 * (1 - k / 22), pan: S.rnd(-0.7, 0.7) });
+      }
+    });
+    pluckBar(36, [62, 69, 74, 78, 81, 78, 74, 69], 0.38);
+
+    // Shot 10 (20-22): the calm returns. Iris closes on 22.0.
+    pluckBar(40, [62, 66, 69, 66, 62, 66, 69, 74], 0.34);
+    bassRoot(40, 44, 26);
+    [62, 69, 74].forEach((m, i) => S.bell(at(40) + i * 0.5, m + 12, { dur: 1.4, vel: 0.36, rev: 0.6, dly: 0.2 }));
+    S.whoosh(at(42), 1.0, { dir: -1, vel: 0.7, lo: 300, hi: 5000 }); // the iris closes
+    S.fadeOut(21.6, 22.0);
   },
 };

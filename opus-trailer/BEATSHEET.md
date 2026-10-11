@@ -1,25 +1,22 @@
-# Opus 5.5 launch trailer — beat sheet
+# Launch trailer: beat sheet
 
-Concept: **"From a single cursor."** One clay-orange cursor is the shape that becomes every scene:
-a line → rows of code being read → a reasoning graph → a built interface → a check mark →
-a single point that detonates into the drop → and back to a cursor for the reveal.
-Every claim on screen is either a plain behaviour (read, think, build, check) or literally
-true of this film (it is made entirely in code).
+18 s · 2560×1440 · 60 fps · 120 BPM (one beat = 0.5 s, one bar = 2 s) · A minor
 
-Tempo: 120 BPM (beat = 0.5 s, bar = 2 s), D minor. 18 s = 9 bars. 2560×1440, 60 fps.
+Concept: a field of 2,304 seeded dots is the model's "thinking" made visible. It forms one shape after another, and the drop breaks it open around one name.
 
-| Time | On screen | Viewer takes in | Audio |
-|---|---|---|---|
-| 0.00 | Ink. A clay cursor slams in (scale 2.4→1, blur→0) | Something is starting | Sub boom + transient, low D drone |
-| 0.50–1.40 | "A blank page." types on, serif, cursor follows | Every project starts empty | Typing ticks per letter, soft blink ticks |
-| 2.00 | Cursor stretches into one long line, text whips off | The cursor is becoming something | Whoosh peaking on 2.0, pluck hook enters (filtered) |
-| 2.25–4.00 | Line splits into scrolling rows of code tokens, 3 parallax depths. Caption "Read closely." | Reading | Hook continues, Dm → Bb, filter slowly opening |
-| 4.00–6.00 | Rows collapse to dots that fly into a branching graph; edges draw; light pulses travel root→leaf on each beat. Caption "Think it through." | Reasoning | Low boom, riser starts, pulse blips on beats, kick on 1 & 3 |
-| 6.00–7.00 | Graph nodes morph into the blocks of an interface, popping on 16ths. Caption "Build it." | Making | Pops on each block, kick every beat |
-| 7.00–7.50 | Big clay check mark strokes over the build. Caption "Check it." | Verifying | Bell chord "ding", snare roll accelerating |
-| 7.50–8.00 | Everything is sucked into one trembling dot | Anticipation | Riser peaks, hard cut to silence at 7.75, reverse swell |
-| 8.00 | Dot explodes: cream floods out, clay rings | The drop | Impact; full beat, bass, pads, lead hook |
-| 8.50 / 9.50 / 10.50 | "Code." "Words." "Sound." whip in/out, each with a code-drawn motif (brackets, ruled lines, live waveform) | What it makes | Whooshes on each whip, groove continues |
-| 11.50–13.00 | "This film" / "is code." — clay underline draws under "code." | It's literally true: this video is code | Accent hit at 12.0 |
-| 13.00–13.90 | Underline grows to fill the frame in clay, then collapses back into a cursor on ink | Bookend: back to the cursor | Drums out, short riser, whoosh, reverse swell |
-| 14.00–18.00 | Reveal: **Claude** / *Opus 5.5* rises in letter by letter, cursor blinking after "5.5" on the beat, slow push-in, drifting dust. Held 3.5 s | The name | Big impact with long reverb tail, pad bloom, hook restated softly on bells |
+| Time | Bar | On screen | What the viewer takes in | Audio |
+|---|---|---|---|---|
+| 0.0–1.0 | 1 | One clay dot in black, a ring out from it, the dot splits in two, then a clay line whips across | Something is starting | Sub boom and metal tick on 0.0, a pluck on 1.0, a whoosh into the cut at 2.0 |
+| 2.0–4.0 | 2 | The dot grid appears from the centre outward, with a beat pulse | A structure, built out of many small parts | Drums come in: kick on every beat, snare on 2 and 4, 8th-note hats |
+| 4.0–6.0 | 3 | The grid becomes a rotating sphere. "Slower." | Pace | Am pad, 8th-note bass, bell hook |
+| 6.0–8.0 | 4 | The sphere opens into a spiral. "Deeper." | Depth | F pad, bell hook answer |
+| 8.0–10.0 | 5 | A travelling wave field. "Sharper." | Precision | C pad, whoosh on 8.0, riser starts |
+| 10.0–12.0 | 6 | The field becomes an orbit that speeds up. Accent rings on every bar | Tension | G pad, 16th-note snare roll, riser to 12.0 |
+| 11.88 | 6 | The orbit collapses to one point | The held breath | Silence under the snare roll |
+| 12.0 | 7 | DROP: the field explodes out, cream flash, zoom and shake | The payoff | Sub, kick on every beat, stabs, rolling bass, full hook, flash |
+| 12.5 | 7 | "Claude" label, "Opus 5.5" rises out of its mask, held to 17.0 | The name | Impact with a 4.5 s reverb tail, on the beat |
+| 13.3–16.0 | 7–8 | The field settles into a wide ring around the title | The name, held | Hook answer on F, drums keep going |
+| 16.0–17.0 | 9 | Kicks thin out, the name exits left | Release | Reverse whoosh into 17.0 |
+| 17.0–18.0 | 9 | The field collapses to one clay dot, then black | The end | Master fade 17.4 to 18.0 |
+
+Audio mix: the build sits 4 to 5 dB under the drop (section automation on `S.level`), so the drop lands on weight. Mastered to −14 LUFS integrated, −1 dBTP. Low end (below 120 Hz) is mono.

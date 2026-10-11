@@ -1,122 +1,169 @@
-// Opus 5.5 launch trailer — synthesized score. 120 BPM, D minor. Every hit is
-// placed on the same timestamps the picture uses (see BEATSHEET.md).
+/* Launch trailer score. 120 BPM, A minor. One beat = 0.5 s, one bar = 2 s.
+ * Every hit lands on a beat or an 8th/16th of one, so every cut sits on the grid.
+ *
+ *  bar  time    what happens
+ *  1    0.0     cold open: sub boom + metal tick on 0.0, pluck, kick on 1 and 3, whip at 1.0
+ *  2    2.0     drums enter, bass 8ths, hats
+ *  3    4.0     Am pad, bell hook, "Slower."
+ *  4    6.0     F pad, bell hook, "Deeper."
+ *  5    8.0     C pad, riser + whoosh, "Sharper."
+ *  6   10.0     G pad, 16th snare roll, riser builds to 12.0
+ *  7   12.0     DROP: sub, kick 4-on-floor, stabs, rolling bass, hook; reveal impact at 12.5
+ *  8   14.0     F, hook answer
+ *  9   16.0     Am, kicks thin out, reverse whoosh at 17.0, master fade 17.4 to 18.0
+ */
 window.SCORE = {
-  duration: 18, seed: 55,
-  build(E) {
-    const B = 0.5, BAR = 2;
-    const sub = E.bus('sub', { gain: 0.9 });
-    const fx = E.bus('fx', { gain: 0.7, reverb: 0.35, irSec: 3.5 });
-    const ui = E.bus('ui', { gain: 0.5, reverb: 0.15, hp: 300 });
-    const drums = E.bus('drums', { gain: 0.8, reverb: 0.06 });
-    const hats = E.bus('hats', { gain: 0.35, reverb: 0.1 });
-    const bass = E.bus('bass', { gain: 0.7 });
-    const pad = E.bus('pad', { gain: 0.55, reverb: 0.5, irSec: 4 });
-    const lead = E.bus('lead', { gain: 0.42, reverb: 0.3, delay: 0.22, delayTime: 0.375 });
-    const bells = E.bus('bells', { gain: 0.45, reverb: 0.6, irSec: 5, delay: 0.3, delayTime: 0.75 });
-    const blead = E.bus('blead', { gain: 0.95, reverb: 0.35, delay: 0.25, delayTime: 0.375 });
-    const tail = E.bus('tail', { gain: 0.9, reverb: 0.9, irSec: 6, irDecay: 2.2 });
-
-    // ---- 0.0 cold open: slam
-    E.subBoom(0.0, sub, { v: 0.75, f0: 120, f1: 32, dec: 2.0 });
-    E.noiseHit(0.0, fx, { v: 0.6, dec: 0.12, type: 'highpass', f: 2500 });
-    E.pad(0.0, ['D2', 'A2'], 2.1, pad, { v: 0.09, a: 0.05, cutoff: 500, r: 0.6 });
-    // typing ticks (13 chars from 0.55, every 65 ms) + blink ticks
-    for (let i = 0; i < 13; i++) if (i !== 1 && i !== 7) E.click(0.55 + i * 0.065, ui, { v: 0.22, f: 2600 + (i % 3) * 300, pan: (i / 12 - 0.5) * 0.4 });
-    [0.5, 1.5].forEach((t) => E.bell(t, 'D6', bells, { v: 0.05, dec: 0.6 }));
-
-    // ---- 2.0 line stretch whoosh; hook enters
-    E.whoosh(1.62, 0.5, fx, { v: 0.6, f0: 300, f1: 5000 });
-    E.reverseSwell(2.0, 0.6, fx, { v: 0.22 });
-
-    // hook (8ths), per bar, D minor: Dm | Bb | F | C
-    const hook = [
-      ['D5', null, 'A4', 'C5', 'D5', null, 'F5', 'E5'],
-      ['D5', null, 'A4', 'C5', 'Bb4', null, 'A4', 'F4'],
-      ['C5', null, 'A4', 'C5', 'F5', null, 'E5', 'C5'],
-      ['E5', null, 'D5', 'C5', 'G4', null, 'A4', 'C5'],
-    ];
-    const chords = [['D3', 'F3', 'A3', 'E4'], ['Bb2', 'D3', 'F3', 'A3'], ['F2', 'A2', 'C3', 'G3'], ['C3', 'E3', 'G3', 'D4']];
-    const roots = ['D2', 'Bb1', 'F1', 'C2'];
-    // build section 2.0–7.75: filtered plucks, opening up
-    for (let bar = 0; bar < 3; bar++) {
-      const t0 = 2 + bar * BAR;
-      hook[bar].forEach((n, k) => {
-        const t = t0 + k * (B / 2); if (!n || t >= 7.75) return;
-        const open = (t - 2) / 5.75;
-        E.pluck(t, n, blead, { v: 0.36, a: 0.004, cutoff: 700 + open * 1600, cutEnv: 1200 + open * 3000, pan: k % 2 ? 0.25 : -0.25 });
-      });
-      E.pad(t0, chords[bar], BAR - 0.05, pad, { v: 0.085, cutoff: 600 + bar * 300, a: 0.3 });
-    }
-    E.pad(7.0, ['C3', 'E3', 'G3', 'D4'], 0.75, pad, { v: 0.06, cutoff: 1200, a: 0.1, r: 0.15 });
-
-    // 4.0 graph: low boom + soft whoosh; riser 4.0 → 7.75
-    E.subBoom(4.0, sub, { v: 0.38, f0: 80, f1: 34, dec: 1.4 });
-    E.whoosh(3.7, 0.55, fx, { v: 0.35, f0: 800, f1: 3000, pan0: 0.5, pan1: -0.5 });
-    E.riser(4.0, 7.75, fx, { v: 0.35, f0: 250, f1: 9000, n0: 'D3', n1: 'D5' });
-    // pulse blips on the graph pulses
-    [4.5, 5.0, 5.5].forEach((t, i) => E.bell(t, ['A5', 'C6', 'D6'][i], bells, { v: 0.09, dec: 0.5, pan: (i - 1) * 0.4 }));
-    // heartbeat kick: 1 & 3 (4–6), every beat (6–7.5)
-    for (let t = 4.0; t < 6.0; t += 1.0) E.kick(t, drums, { v: 0.6, dec: 0.3 });
-    for (let t = 6.0; t < 7.5; t += 0.5) E.kick(t, drums, { v: 0.75, dec: 0.3 });
-    // 6.0 build: whoosh + block pops (15 blocks, 30 ms stagger)
-    E.whoosh(5.72, 0.4, fx, { v: 0.35, f0: 500, f1: 4000 });
-    for (let i = 0; i < 15; i++) E.click(6.0 + i * 0.03 + 0.12, ui, { v: 0.16, f: 1400 + (i % 5) * 220, pan: ((i * 7) % 15 / 14 - 0.5) * 0.8 });
-    // 7.0 check: bell chord ding + swish
-    ['D5', 'A5', 'E6'].forEach((n, i) => E.bell(7.02 + i * 0.012, n, bells, { v: 0.11, dec: 1.4, pan: (i - 1) * 0.3 }));
-    E.whoosh(6.95, 0.35, fx, { v: 0.25, f0: 1500, f1: 7000, pan0: -0.3, pan1: 0.4 });
-    // snare roll 7.0 → 7.75, accelerating
-    { let t = 7.0, step = 0.125; let i = 0; while (t < 7.74) { E.snare(t, drums, { v: 0.25 + 0.5 * (t - 7) / 0.75 }); t += step; step = Math.max(0.03, step * 0.85); i++; } }
-    // 7.5 suck-in: reverse swell into the drop, silence 7.75–8.0 (only the swell)
-    E.reverseSwell(8.0, 0.5, fx, { v: 0.45 });
-
-    // ---- 8.0 DROP
-    E.impact(8.0, tail, { v: 0.9, tail: 2.5 });
-    E.subBoom(8.0, sub, { v: 0.9, f0: 100, f1: 30, dec: 1.6 });
-    const dropEnd = 13.0;
+  seconds: 18,
+  tail: 0,
+  seed: 20261011,
+  opts: { reverbWet: 0.3, rt60: 3.4, reverbSeconds: 4.6, delayTime: 0.375, delayFeedback: 0.34, delayWet: 0.26 },
+  build(S) {
+    const B = 0.5;
+    const at = (beat) => beat * B;
     const kicks = [];
-    for (let t = 8.0; t < dropEnd - 0.01; t += B) { E.kick(t, drums, { v: 0.95 }); kicks.push(t); }
-    for (let t = 8.5; t < dropEnd; t += 1.0) E.clap(t, drums, { v: 0.7 });
-    for (let t = 8.0; t < dropEnd; t += B / 2) { const off = Math.round((t - 8) / (B / 2)) % 2 === 1; E.hat(t, hats, { v: off ? 0.5 : 0.2, open: off && Math.round((t - 8) / (B / 2)) % 4 === 3, pan: off ? 0.2 : -0.2 }); }
-    // bass 8ths with octave bounce, sidechained
-    const dropChords = [0, 1, 2, 3]; // Dm(8–10) Bb(10–12) F(12–13) C(13–14 tension, drums out)
-    for (let t = 8.0; t < dropEnd; t += B / 2) {
-      const bar = t < 10 ? 0 : t < 12 ? 1 : 2; const k = Math.round((t - 8) / (B / 2));
-      const r = roots[bar]; const n = Synth.n2m(r) + (k % 2 ? 12 : 0);
-      E.bass(t, Synth.midi(n), B / 2 - 0.03, bass, { v: 0.5 });
-    }
-    E.pad(8.0, chords[0], 2, pad, { v: 0.1, cutoff: 2600, a: 0.02 });
-    E.pad(10.0, chords[1], 2, pad, { v: 0.1, cutoff: 2600, a: 0.02 });
-    E.pad(12.0, chords[2], 1, pad, { v: 0.1, cutoff: 2600, a: 0.02 });
-    E.duck('pad', kicks, 0.55); E.duck('bass', kicks, 0.7, 0.18); E.duck('lead', kicks, 0.25);
-    // lead hook, brighter, an octave up on the second pass
-    for (let bar = 0; bar < 3; bar++) {
-      const t0 = 8 + bar * BAR; const ph = bar === 2 ? hook[2] : hook[bar];
-      ph.forEach((n, k) => { if (!n) return; const t = t0 + k * (B / 2); if (t >= dropEnd) return;
-        E.voice(t, Synth.hz(n), B / 2 * 0.8, lead, { type: 'sawtooth', v: 0.18, a: 0.004, d: 0.18, s: 0.5, r: 0.12, unison: 3, spread: 16, cutoff: 2800, cutEnv: 2500, fdec: 0.15 });
-        E.bell(t, n, bells, { v: 0.05, dec: 0.5 }); });
-    }
-    // whips on word changes
-    [8.4, 9.33, 10.33, 11.33].forEach((t, i) => E.whoosh(t - 0.05, 0.3, fx, { v: 0.38, f0: 600, f1: 6000, pan0: 0.7, pan1: -0.7 }));
-    // 12.0 "is code." accent
-    E.subBoom(12.0, sub, { v: 0.5, f0: 90, f1: 40, dec: 0.8 });
-    E.bell(12.0, 'A5', bells, { v: 0.12, dec: 1.2 }); E.bell(12.0, 'D6', bells, { v: 0.08, dec: 1.2 });
 
-    // ---- 13.0 → 14.0: drums out, C chord tension, riser, takeover whoosh
-    E.pad(13.0, chords[3], 1.0, pad, { v: 0.1, cutoff: 1800, a: 0.05, r: 0.2 });
-    E.bass(13.0, 'C2', 0.9, bass, { v: 0.45 });
-    E.riser(13.0, 13.92, fx, { v: 0.4, f0: 500, f1: 12000, n0: 'G3', n1: 'G5' });
-    E.whoosh(12.9, 0.62, fx, { v: 0.5, f0: 200, f1: 3500, pan0: -0.2, pan1: 0.2 });
-    E.whoosh(13.45, 0.45, fx, { v: 0.4, f0: 3000, f1: 400, pan0: 0.3, pan1: -0.3 });
-    E.reverseSwell(14.0, 0.5, fx, { v: 0.5 });
+    // ---- bar 1: cold open -------------------------------------------------
+    S.sub(at(0), { dur: 1.8, f0: 58, f1: 26, vel: 1 });
+    S.tick(at(0), { f: 3100, vel: 0.75, pan: -0.2 });
+    S.pluck(at(1), 81, { dur: 0.22, bright: 5200, dark: 1300, vel: 0.7, dly: 0.25, rev: 0.4, pan: 0.2 });
+    [1, 3].forEach((b) => {
+      S.kick(at(b), { vel: 0.85 });
+      kicks.push(at(b));
+    });
+    S.whoosh(at(3.75), 0.5, { dir: 1, vel: 0.75 });
+    S.click(at(4) - 0.005, { f: 1800, vel: 0.2, pan: 0 });
 
-    // ---- 14.0 REVEAL: big impact, long tail, pad bloom, soft hook on bells
-    E.impact(14.0, tail, { v: 1.0, tail: 4.5 });
-    E.subBoom(14.0, sub, { v: 1.0, f0: 110, f1: 28, dec: 3.5 });
-    E.pad(14.0, ['D2', 'A2', 'D3', 'F3', 'A3', 'E4'], 3.6, pad, { v: 0.11, a: 0.04, d: 1.5, s: 0.7, cutoff: 2200, r: 0.5 });
-    E.bass(14.0, 'D1', 3.4, bass, { v: 0.4 });
-    ['D5', 'A4', 'C5', 'D5', 'F5', 'E5'].forEach((n, i) => E.bell(14.5 + [0, 0.25, 0.5, 0.75, 1.0, 1.5][i], n, bells, { v: 0.085, dec: 1.8, pan: (i % 2 ? 0.3 : -0.3) }));
-    E.bell(16.5, 'D5', bells, { v: 0.1, dec: 2.5 }); E.bell(16.5, 'A5', bells, { v: 0.06, dec: 2.5 });
-    // cursor blink ticks on the beat during the hold
-    for (let t = 15.0; t < 17.6; t += 1.0) E.click(t, ui, { v: 0.06, f: 3200 });
+    // ---- bar 2: drums enter -----------------------------------------------
+    for (let b = 4; b < 8; b++) {
+      S.kick(at(b), { vel: 0.95 });
+      kicks.push(at(b));
+      S.hat(at(b + 0.5), { open: b % 2 === 1, vel: 0.5 });
+    }
+    S.snare(at(5), { vel: 0.9 });
+    S.snare(at(7), { vel: 0.95 });
+    S.tick(at(4), { f: 5200, vel: 0.22, pan: 0.3 });
+
+    // ---- bars 3-4: Am and F, bass 8ths, bell hook -------------------------
+    const bassAt = (b0, b1, root) => {
+      for (let b = b0; b < b1; b += 0.5) S.bass(at(b), root, { dur: 0.42, vel: 0.85 });
+    };
+    S.pad(at(8), [57, 60, 64], { dur: 4.2, vel: 0.5, cut: 1300, cutTo: 2600 });
+    bassAt(8, 12, 33);
+    [8, 9, 10, 11].forEach((b) => {
+      S.kick(at(b), { vel: 0.95 });
+      kicks.push(at(b));
+      S.hat(at(b + 0.5), { vel: 0.5, open: b === 9 });
+    });
+    S.snare(at(9), { vel: 0.95 });
+    S.snare(at(11), { vel: 1 });
+    // bell hook: A4 E5 C5 A4 | E5 C5 A4 C5
+    [69, 76, 72, 69, 76, 72, 69, 72].forEach((m, i) => {
+      S.bell(at(8 + i * 0.5), m, { dur: 0.9, vel: 0.5, pan: i % 2 ? 0.25 : -0.25 });
+    });
+    S.pad(at(12), [53, 57, 60], { dur: 4.2, vel: 0.5, cut: 1300, cutTo: 2600 });
+    bassAt(12, 16, 29);
+    [12, 13, 14, 15].forEach((b) => {
+      S.kick(at(b), { vel: 0.9 });
+      kicks.push(at(b));
+      S.hat(at(b + 0.5), { vel: 0.45 });
+    });
+    S.snare(at(13), { vel: 0.95 });
+    S.snare(at(15), { vel: 1 });
+    [65, 69, 72, 69, 65, 69, 72, 77].forEach((m, i) => {
+      S.bell(at(12 + i * 0.5), m, { dur: 0.9, vel: 0.5, pan: i % 2 ? 0.25 : -0.25 });
+    });
+
+    // ---- bar 5: C, cut on 8.0 with a whoosh; the riser starts -------------
+    S.whoosh(at(16), 0.6, { dir: 1, vel: 0.9 });
+    S.pad(at(16), [48, 52, 55], { dur: 4.2, vel: 0.55, cut: 1200, cutTo: 3000 });
+    bassAt(16, 20, 36);
+    [16, 17, 18, 19].forEach((b) => {
+      S.kick(at(b), { vel: 0.95 });
+      kicks.push(at(b));
+      S.hat(at(b + 0.5), { vel: 0.5 });
+    });
+    S.snare(at(17), { vel: 0.95 });
+    S.snare(at(19), { vel: 1 });
+
+    // ---- bar 6: G, the build -------------------------------------------------
+    S.pad(at(20), [55, 59, 62], { dur: 4.2, vel: 0.6, cut: 1200, cutTo: 3800 });
+    S.riser(at(16), 4, { f0: 260, f1: 9000, vel: 0.7, q: 1.2 });
+    bassAt(20, 24, 31);
+    [20, 21, 22, 23].forEach((b) => {
+      S.kick(at(b), { vel: 1 });
+      kicks.push(at(b));
+      S.hat(at(b + 0.5), { vel: 0.55, open: true });
+    });
+    // 16th snare roll from 10.0 to 12.0
+    for (let k = 0; k < 16; k++) {
+      const tt = at(20) + k * 0.125;
+      S.snare(tt, { vel: 0.35 + (k / 16) * 0.65, dec: 0.12 });
+    }
+    S.whoosh(at(23.5), 0.5, { dir: 1, vel: 0.7 });
+
+    // ---- bar 7: DROP at 12.0 -------------------------------------------------
+    S.sub(at(24), { dur: 1.6, f0: 52, f1: 24, vel: 1 });
+    S.stab(at(24), [57, 60, 64], { vel: 0.7, dur: 0.4 });
+    S.whoosh(at(24), 0.7, { dir: -1, vel: 0.5 });
+    S.pad(at(24), [57, 60, 64], { dur: 3.8, vel: 0.75, cut: 2400, cutTo: 4200, a: 0.02 });
+    bassAt(24, 28, 33);
+    S.kick(at(24), { vel: 1.1, f0: 175, f1: 40 });
+    kicks.push(at(24));
+    for (let b = 25; b < 28; b++) {
+      S.kick(at(b), { vel: 1 });
+      kicks.push(at(b));
+      S.hat(at(b + 0.5), { vel: 0.6, open: true });
+    }
+    S.clap(at(25), { vel: 0.9 });
+    S.clap(at(27), { vel: 1 });
+    S.snare(at(25), { vel: 0.8 });
+    S.snare(at(27), { vel: 1 });
+    // stabs on the off-beats
+    [25.5, 26.5, 27.5].forEach((b) => S.stab(at(b), [57, 60, 64], { vel: 0.4, dur: 0.22 }));
+    // the hook, now full
+    [69, 76, 72, 81, 76, 72, 76, 72].forEach((m, i) => {
+      S.bell(at(24 + i * 0.5), m, { dur: 0.7, vel: 0.62, pan: i % 2 ? 0.3 : -0.3, dly: 0.3 });
+    });
+    S.pluck(at(24), 45, { dur: 0.3, vel: 0.5, bright: 1600, dark: 400, rev: 0.1 });
+
+    // reveal impact at 12.5: sub + noise crack, long tail
+    S.impact(at(25), { vel: 1, tail: 4.5, subDur: 2 });
+    S.tick(at(25), { f: 2400, vel: 0.3, pan: 0 });
+
+    // ---- bar 8: F, hook answer ---------------------------------------------
+    S.pad(at(28), [53, 57, 60], { dur: 3.8, vel: 0.6, cut: 2400, cutTo: 4200, a: 0.02 });
+    bassAt(28, 32, 29);
+    [28, 29, 30, 31].forEach((b) => {
+      S.kick(at(b), { vel: 0.95 });
+      kicks.push(at(b));
+      S.hat(at(b + 0.5), { vel: 0.5, open: b === 29 });
+    });
+    S.snare(at(29), { vel: 0.9 });
+    S.snare(at(31), { vel: 1 });
+    [65, 69, 72, 77, 72, 69, 72, 69].forEach((m, i) => {
+      S.bell(at(28 + i * 0.5), m, { dur: 0.8, vel: 0.52, pan: i % 2 ? -0.3 : 0.3, dly: 0.25 });
+    });
+
+    // ---- bar 9: Am, thins out, reverse whoosh into the end ---------------
+    S.pad(at(32), [57, 60, 64, 69], { dur: 4, vel: 0.55, cut: 2200, cutTo: 1200, r: 1.4 });
+    bassAt(32, 34, 33);
+    [32, 34].forEach((b) => {
+      S.kick(at(b), { vel: 0.9 });
+      kicks.push(at(b));
+    });
+    S.whoosh(at(34), 1.0, { dir: -1, vel: 0.6, lo: 300, hi: 6000 });
+    S.bell(at(33), 81, { dur: 1.6, vel: 0.4, rev: 0.7, dly: 0.35 });
+
+    S.sidechain(kicks, 0.55, 0.22);
+
+    // section levels: the build sits lower so the drop lands with weight
+    const lv = S.level.gain;
+    lv.setValueAtTime(0.82, 0);
+    lv.linearRampToValueAtTime(0.6, at(8));
+    lv.linearRampToValueAtTime(0.72, at(16));
+    lv.linearRampToValueAtTime(0.96, at(24) - 0.001);
+    lv.setValueAtTime(1.0, at(24));
+    lv.linearRampToValueAtTime(0.84, at(32));
+    S.fadeOut(17.4, 18.0);
   },
 };

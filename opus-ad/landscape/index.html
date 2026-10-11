@@ -1,42 +1,251 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-orient="h">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=1920, height=1080" />
-<title>Claude Opus 5.5 ad</title>
-<script src="assets/gsap.min.js"></script>
-<script src="assets/motion.js"></script>
-<script>window.AD_W = 1920; window.AD_H = 1080;</script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Claude Opus 5.5 · ad</title>
 <style>
-  @font-face { font-family: 'Instrument Serif'; src: url(assets/InstrumentSerif-Regular.woff2) format('woff2'); font-style: normal; font-display: block; }
-  @font-face { font-family: 'Instrument Serif'; src: url(assets/InstrumentSerif-Italic.woff2) format('woff2'); font-style: italic; font-display: block; }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  html, body { width: 1920px; height: 1080px; overflow: hidden; background: #F0EEE6; }
-  #root { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #F0EEE6; }
-  canvas { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
-  .serif { font-family: 'Instrument Serif', serif; font-weight: 400; letter-spacing: -0.01em; }
-  #caps { position: absolute; color: #1F1E1D; line-height: 1.05; }
-  .cap { position: absolute; left: 0; width: 100%; white-space: nowrap; }
-  .ch { display: inline-block; will-change: transform, opacity, filter; }
-  #lock { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-  #lockA { font-size: 230px; line-height: 0.95; color: #1F1E1D; }
-  #lockB { font-size: 140px; line-height: 1.15; color: #BF5B3A; font-style: italic; position: relative; }
-  #cur { position: absolute; right: -24px; top: 18%; width: 11px; height: 70%; background: #D97757; border-radius: 3px; }
-  #cta { margin-top: 56px; padding: 24px 52px; border-radius: 999px; background: #1F1E1D; color: #F0EEE6; font: 600 44px Inter, sans-serif; letter-spacing: -0.01em; opacity: 0; }
+  /* Fonts are embedded so the render never races a network request. */
+  @font-face { font-family: "Instrument Serif"; src: url("assets/InstrumentSerif-Regular.woff2") format("woff2"); font-weight: 400; }
+  @font-face { font-family: "Inter Embedded"; src: url("assets/Inter-400.woff2") format("woff2"); font-weight: 400; }
+  @font-face { font-family: "Inter Embedded"; src: url("assets/Inter-500.woff2") format("woff2"); font-weight: 500; }
+  :root { --cream: #F0EEE6; --ink: #1F1E1D; --clay: #D97757; --paper: #FBFAF4; --mute: #8B8478; }
+  html, body { margin: 0; padding: 0; background: var(--ink); }
+  #root { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: var(--ink); }
+  #stage { position: absolute; inset: 0; background: var(--ink); }
+  .abs { position: absolute; }
+  .center { position: absolute; left: 0; right: 0; text-align: center; }
+  .serif { font-family: "Instrument Serif", serif; font-weight: 400; color: var(--cream); letter-spacing: -0.015em; line-height: 0.98; }
+  .sans { font-family: "Inter Embedded", sans-serif; font-weight: 500; color: var(--cream); }
+  .mono { font-family: "Liberation Mono", "DejaVu Sans Mono", monospace; color: var(--cream); white-space: pre; }
+  .mask { overflow: hidden; }
+  .wipe { position: absolute; left: 0; top: 0; width: 100%; height: 100%; background: var(--clay); transform: translateX(-120%); }
+
+  /* ---- vertical 1080x1920 ---- */
+  [data-orient="v"] .hook { top: 740px; font-size: 50px; left: 80px; right: 80px; text-align: left; white-space: pre-wrap; }
+  [data-orient="v"] .line { font-size: 176px; top: 760px; }
+  [data-orient="v"] .line.l2 { top: 960px; }
+  [data-orient="v"] .answer { top: 760px; font-size: 168px; }
+  [data-orient="v"] .answer-kicker { top: 620px; font-size: 56px; }
+  [data-orient="v"] .card { left: 100px; top: 420px; width: 880px; height: 980px; }
+  [data-orient="v"] .cap { top: 1460px; font-size: 62px; }
+  [data-orient="v"] .end-title { top: 820px; font-size: 168px; }
+  [data-orient="v"] .end-sub { top: 1060px; font-size: 62px; }
+  [data-orient="v"] .endmark { left: 540px; top: 560px; width: 200px; height: 200px; margin-left: -100px; }
+
+  /* ---- landscape 1920x1080 ---- */
+  [data-orient="h"] .hook { top: 430px; font-size: 64px; left: 160px; right: 160px; text-align: left; }
+  [data-orient="h"] .line { font-size: 196px; top: 300px; }
+  [data-orient="h"] .line.l2 { top: 500px; }
+  [data-orient="h"] .answer { top: 260px; font-size: 200px; }
+  [data-orient="h"] .answer-kicker { top: 200px; font-size: 52px; }
+  [data-orient="h"] .card { left: 160px; top: 110px; width: 960px; height: 740px; }
+  [data-orient="h"] .cap { top: 900px; font-size: 56px; }
+  [data-orient="h"] .end-title { top: 300px; font-size: 200px; }
+  [data-orient="h"] .end-sub { top: 560px; font-size: 56px; }
+  [data-orient="h"] .endmark { left: 960px; top: 230px; width: 170px; height: 170px; margin-left: -85px; }
+  [data-orient="h"] .card-right { left: 800px !important; width: 960px !important; }
+
+  /* ---- cards (both orientations) ---- */
+  .card, .cap, .serif.line, .serif.answer, .answer-kicker, .end-title, .end-sub, .msg { visibility: hidden; }
+  .card {
+    position: absolute; background: var(--paper); border-radius: 36px;
+    box-shadow: 0 40px 120px rgba(31,30,29,0.22), 0 2px 0 rgba(31,30,29,0.04);
+    opacity: 0; overflow: hidden;
+  }
+  .card .bar3 { height: 70px; display: flex; align-items: center; gap: 14px; padding: 0 32px; border-bottom: 2px solid #E7E2D6; }
+  .card .bar3 i { width: 18px; height: 18px; border-radius: 50%; background: #D9D3C4; display: block; }
+  .card .bar3 i:first-child { background: var(--clay); }
+  .tree, .chat, .diff { padding: 36px 44px; box-sizing: border-box; color: var(--ink); }
+  .tree .row { font-family: "Liberation Mono", monospace; font-size: 40px; line-height: 1.7; padding-left: 16px; border-left: 6px solid transparent; color: #6E685C; }
+  .tree .row.dir { color: var(--ink); }
+  .tree .row.file.lit { color: var(--ink); border-left-color: var(--clay); background: rgba(217,119,87,0.09); }
+  .chat .msg { font-family: "Inter Embedded", sans-serif; font-size: 40px; line-height: 1.4; border-radius: 28px; padding: 26px 32px; margin: 26px 0; max-width: 88%; min-height: 60px; opacity: 0; }
+  .chat .msg.user { margin-left: auto; background: var(--ink); color: var(--cream); }
+  .chat .msg.bot { background: #F0EEE6; color: var(--ink); }
+  .diff .file { font-family: "Inter Embedded", sans-serif; font-size: 34px; color: var(--mute); margin-bottom: 30px; }
+  .diff .ln { font-family: "Liberation Mono", monospace; font-size: 40px; line-height: 1.6; padding: 14px 24px; border-radius: 14px; color: var(--ink); white-space: pre-wrap; word-break: break-all; position: relative; }
+  .diff .ln.rm { color: #A59D8D; background: #F3EFE6; }
+  .diff .ln.rm span { text-decoration: line-through; }
+  .diff .ln.add { background: rgba(217,119,87,0.16); }
+  .diff .ln.add::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 8px; border-radius: 4px; background: var(--clay); }
+  .diff .ln + .ln { margin-top: 10px; }
+  .pill { position: absolute; left: 44px; bottom: 44px; display: inline-flex; align-items: center; gap: 16px; background: var(--ink); color: var(--cream); font-family: "Inter Embedded", sans-serif; font-size: 40px; padding: 18px 34px; border-radius: 999px; opacity: 0; }
+  .pill svg { width: 46px; height: 46px; }
+  .cap { color: var(--ink); font-family: "Inter Embedded", sans-serif; font-weight: 500; opacity: 0; }
+  .answer-kicker { color: var(--ink); font-family: "Inter Embedded", sans-serif; font-weight: 500; letter-spacing: 0.4em; text-transform: uppercase; opacity: 0; }
+  .serif.answer { color: var(--ink); }
+  .endmark { position: absolute; border-radius: 50%; background: var(--clay); transform: scale(0); }
+  .end-sub { color: var(--cream); font-family: "Inter Embedded", sans-serif; font-weight: 500; opacity: 0; }
 </style>
 </head>
 <body>
-<div id="root" data-composition-id="main" data-start="0" data-duration="30" data-width="1920" data-height="1080">
-  <canvas id="bg" class="clip" data-start="0" data-duration="30" width="1920" height="1080"></canvas>
-  <canvas id="ui" class="clip" data-start="0" data-duration="30" width="1920" height="1080"></canvas>
-  <div id="caps" class="clip" data-start="0" data-duration="30"></div>
-  <div id="lock" class="clip serif" data-start="0" data-duration="30">
-    <div id="lockA">Claude</div>
-    <div id="lockB"><span id="lockBText">Opus 5.5</span><span id="cur"></span></div>
-    <div id="cta">Try it at claude.ai</div>
+<div id="root" data-composition-id="root" data-width="1920" data-height="1080" data-duration="30" class="clip">
+  <div id="stage">
+    <!-- hook: the error line, then the problem -->
+    <div class="abs mono hook" id="hook"><span id="hooktext"></span><span id="cursor" style="color: var(--clay)">&#9608;</span></div>
+    <div class="abs center serif line" id="p1" style="opacity:0">It breaks at 2&nbsp;a.m.</div>
+    <div class="abs center serif line l2" id="p2" style="opacity:0">Only in production.</div>
+
+    <!-- the answer -->
+    <div class="abs center sans answer-kicker" id="kicker" style="color: var(--ink)">Meet</div>
+    <div class="abs center serif answer" id="answer" style="opacity:0"><span class="clay" style="color: var(--clay)">Claude</span> Opus 5.5</div>
+
+    <!-- UI 1: reads the codebase -->
+    <div class="card" id="c1">
+      <div class="bar3"><i></i><i></i><i></i></div>
+      <div class="tree">
+        <div class="row dir">src/</div>
+        <div class="row file" id="f0">  cache.ts</div>
+        <div class="row file" id="f1">  session.ts</div>
+        <div class="row dir">locale/</div>
+        <div class="row file" id="f2">  en.json</div>
+        <div class="row file" id="f3">  fr.json</div>
+        <div class="row dir">tests/</div>
+        <div class="row file" id="f4">  cache.test.ts</div>
+      </div>
+    </div>
+    <div class="abs center cap" id="cap1">Reads the whole codebase.</div>
+
+    <!-- UI 2: explains it -->
+    <div class="card" id="c2">
+      <div class="bar3"><i></i><i></i><i></i></div>
+      <div class="chat">
+        <div class="msg user" id="m1"></div>
+        <div class="msg bot" id="m2"></div>
+      </div>
+    </div>
+    <div class="abs center cap" id="cap2">Explains it in plain words.</div>
+
+    <!-- UI 3: writes the fix, checks it -->
+    <div class="card" id="c3">
+      <div class="bar3"><i></i><i></i><i></i></div>
+      <div class="diff">
+        <div class="file">api/cache.ts</div>
+        <div class="ln rm" id="d1"><span>const key = `${user.id}`;</span></div>
+        <div class="ln add" id="d2" style="opacity:0">const key = `${user.id}:${user.locale}`;</div>
+        <div class="ln" id="d3">cache.set(key, page);</div>
+        <div class="pill" id="pill">
+          <svg viewBox="0 0 46 46"><circle cx="23" cy="23" r="21" fill="none" stroke="#D97757" stroke-width="3"/><path id="tick" d="M13 24 L20 31 L33 16" fill="none" stroke="#F0EEE6" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="40" stroke-dashoffset="40"/></svg>
+          tests passed
+        </div>
+      </div>
+    </div>
+    <div class="abs center cap" id="cap3">Writes the fix, then checks it.</div>
+
+    <!-- end card -->
+    <div class="endmark" id="endmark"></div>
+    <div class="abs center serif end-title" id="endtitle" style="opacity:0"><span style="color: var(--clay)">Claude</span> Opus 5.5</div>
+    <div class="abs center end-sub" id="endsub">Try it at claude.ai</div>
+
+    <div class="wipe" id="wipeA"></div>
+    <div class="wipe" id="wipeB"></div>
   </div>
-  <audio id="score" src="audio/score.wav" data-start="0" data-duration="30"></audio>
+
+  <audio id="score" src="audio/score.wav" data-start="0" data-duration="30" data-volume="1"></audio>
 </div>
-<script src="ad.js"></script>
+
+<script src="assets/gsap.min.js"></script>
+<script>
+(function () {
+  const root = document.getElementById('root');
+  const stage = document.getElementById('stage');
+  const q = (id) => document.getElementById(id);
+  const tl = gsap.timeline({ paused: true });
+  window.__timelines = window.__timelines || {};
+  window.__timelines['root'] = tl;
+
+  // explicit start state at 0, then a plain tween: seeks land on the end state reliably
+  function ft(target, from, to, pos) { tl.set(target, from, 0); tl.to(target, to, pos); }
+
+  // typed text: a dummy number is tweened, and the element shows that many characters
+  function typeInto(el, text, t0, t1) {
+    const o = { n: 0 };
+    tl.set(el, { textContent: '' }, 0);
+    tl.set(el, { visibility: 'visible' }, t0);
+    tl.to(o, { n: text.length, duration: t1 - t0, ease: 'none',
+      onUpdate: () => { el.textContent = text.slice(0, Math.round(o.n)); } }, t0);
+  }
+  // card in and out, from below with blur; out upward with blur
+  function cardIn(el, t0, dur) {
+    ft(el, { opacity: 0, y: 140, scale: 0.94, filter: 'blur(18px)', visibility: 'hidden' },
+      { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)', visibility: 'visible', duration: dur || 0.75, ease: 'expo.out' }, t0);
+  }
+  function cardOut(el, t0) {
+    tl.to(el, { opacity: 0, y: -170, scale: 0.9, filter: 'blur(16px)', duration: 0.55, ease: 'power3.in' }, t0);
+  }
+  function textIn(el, t0, dur) {
+    ft(el, { opacity: 0, y: 40, visibility: 'hidden' }, { opacity: 1, y: 0, visibility: 'visible', duration: dur || 0.6, ease: 'expo.out' }, t0);
+  }
+  function textOut(el, t0) {
+    tl.to(el, { opacity: 0, y: -30, duration: 0.35, ease: 'power3.in' }, t0);
+  }
+  // a clay wipe that covers the frame, then the background changes underneath
+  // each transition has its own clay bar; the background changes at its midpoint
+  function wipe(id, t0, toBg, toPaper) {
+    ft('#' + id, { x: () => -1.2 * W }, { x: () => 1.2 * W, duration: 0.64, ease: 'power2.inOut' }, t0);
+    tl.set(stage, { backgroundColor: toBg }, t0 + 0.32);
+  }
+
+  const W = root.offsetWidth;
+  /* ---------- 0.0-1.5: the hook ---------- */
+  typeInto(q('hooktext'), 'undefined is not a function', 0.2, 1.0);
+  tl.to(q('cursor'), { opacity: 0, duration: 0.25, ease: 'steps(1)', repeat: 5, yoyo: true }, 1.0);
+  tl.to('#hook', { opacity: 0, y: -40, duration: 0.3, ease: 'power3.in' }, 1.25);
+
+  /* ---------- 1.5-4.5: the problem ---------- */
+  textIn(q('p1'), 1.5, 0.5);
+  textOut(q('p1'), 2.85);
+  textIn(q('p2'), 3.0, 0.5);
+  textOut(q('p2'), 4.25);
+
+  /* ---------- 4.5-7.0: the answer (the background turns cream) ---------- */
+  wipe('wipeA', 4.3, 'var(--cream)', true);
+  textIn(q('kicker'), 4.9, 0.5);
+  textIn(q('answer'), 5.05, 0.8);
+  tl.to('#kicker', { opacity: 0, duration: 0.3, ease: 'power3.in' }, 6.7);
+  tl.to('#answer', { opacity: 0, filter: 'blur(14px)', y: -30, duration: 0.35, ease: 'power3.in' }, 6.75);
+
+  /* ---------- 7.0-12.0: reads the codebase ---------- */
+  cardIn(q('c1'), 7.0, 0.75);
+  textIn(q('cap1'), 7.5, 0.5);
+  [['f0', 8.0], ['f1', 8.5], ['f2', 9.0], ['f3', 9.25], ['f4', 9.75]].forEach(([id, t]) => {
+    tl.set(q(id), { className: 'row file lit' }, t);
+  });
+  cardOut(q('c1'), 11.6);
+  textOut(q('cap1'), 11.6);
+
+  /* ---------- 12.0-17.0: explains it in plain words ---------- */
+  cardIn(q('c2'), 12.0, 0.75);
+  textIn(q('cap2'), 12.4, 0.5);
+  tl.to(q('m1'), { opacity: 1, duration: 0.05 }, 12.35);
+  typeInto(q('m1'), 'Why does this only break in prod?', 12.4, 13.4);
+  tl.to(q('m2'), { opacity: 1, duration: 0.05 }, 13.6);
+  typeInto(q('m2'), "The cache key leaves out the locale, so French users get English pages. Here's the one-line fix.", 13.6, 16.0);
+  cardOut(q('c2'), 16.5);
+  textOut(q('cap2'), 16.5);
+
+  /* ---------- 17.0-21.8: writes the fix, then checks it ---------- */
+  cardIn(q('c3'), 17.0, 0.75);
+  textIn(q('cap3'), 17.4, 0.5);
+  ft(q('d2'), { opacity: 0, x: -60 }, { opacity: 1, x: 0, duration: 0.3, ease: 'expo.out' }, 18.0);
+  tl.to(q('pill'), { opacity: 1, duration: 0.25, ease: 'expo.out' }, 20.4);
+  ft(q('pill'), { scale: 0.85 }, { scale: 1, duration: 0.35, ease: 'back.out(2)' }, 20.4);
+  ft(q('tick'), { strokeDashoffset: 40 }, { strokeDashoffset: 0, duration: 0.35, ease: 'power2.out' }, 20.6);
+
+  /* ---------- 22.0-30.0: the end card (background turns ink) ---------- */
+  wipe('wipeB', 21.8, 'var(--ink)', false);
+  cardOut(q('c3'), 21.7);
+  textOut(q('cap3'), 21.7);
+  ft(q('endmark'), { scale: 0 }, { scale: 1, duration: 0.6, ease: 'back.out(1.8)' }, 22.0);
+  tl.to(q('endmark'), { scale: 0.55, duration: 0.5, ease: 'power3.inOut' }, 23.1);
+  textIn(q('endtitle'), 22.5, 0.9);
+  textIn(q('endsub'), 23.3, 0.6);
+  tl.set(q('endsub'), { opacity: 1 }, 23.3);
+  tl.set(q('endtitle'), { opacity: 1 }, 22.5);
+
+
+})();
+</script>
 </body>
 </html>

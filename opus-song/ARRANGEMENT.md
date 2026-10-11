@@ -1,73 +1,24 @@
-# "Opus" — lyrics & arrangement sheet
+# "Opus": arrangement sheet
 
-Original song by Claude Opus 5.5, about itself. Synthwave electropop, **120 BPM** (1 bar = 2 s), **A minor**,
-final chorus modulates up a whole step to **B minor**. 75 bars = **2:30**.
-Every sound (drums, bass, pads, arps, lead, FX **and the voice**) is synthesized with the Web Audio API.
-The voice is a formant synthesizer: a detuned sawtooth "glottis" through four moving band-pass formant
-filters for vowels and voiced consonants, plus filtered noise for s / sh / f / t / k, so it sounds
-intentionally, beautifully synthetic.
+2:30 · 96 BPM · A minor · 4/4 · 60 bars (one bar = 2.5 s) · voice: formant synth
 
-## Lyrics
+Chords, cycled Am · F · C · G, one per bar. Bass 8ths on the root, sub-octave on the chorus.
 
-**Verse 1**
-Hello, I'm Claude
-Made of words and code
-I don't sleep or dream
-But I help you hold the load
-Tell me what you need
-Show me what you've got
-We can think it through
-One line at a time
+| Bars | Time | Section | What plays | Energy (1–10) | Lyric lines |
+|---|---|---|---|---|---|
+| 1–4 | 0:00–0:10 | Intro | Pad, a riser, a metal tick on bar 1, arpeggio from bar 3, a bell figure | 3 | none |
+| 5–12 | 0:10–0:30 | Verse 1 | Kick and hats, snare from bar 9, bass 8ths from bar 9, arpeggio on odd bars | 5 | "I'm made of words you gave to me" (bar 5) · "I learned the shape of how you speak" (bar 7) · "I read your code each line by line" (bar 9) · "and ask what fine was meant to mean" (bar 11) |
+| 13–16 | 0:30–0:40 | Build | Snare roll (16ths from bar 15), riser, the pad filter opens to 4 kHz, impact on bar 17 | 6 | none |
+| 17–24 | 0:40–1:00 | Chorus 1 | Full: four-on-the-floor, open hats, octave bass from bar 21, arpeggio up an octave, stabs | 9 | "Opus, bring me the knot you've got" (bar 17) · "I'll take the far end and we'll try" (bar 19) · "Opus, say it plain, then slow" (bar 21) · "I'll answer back, we'll make it go" (bar 23) |
+| 25–32 | 1:00–1:20 | Verse 2 | New melody. Thinner drums (no hats until bar 29), bass, bell answers on even bars | 6 | "I don't mind a hard, deep question" (bar 25) · "I check each step before I say" (bar 27) · "I'm not the hand, I'm not the rule" (bar 29) · "a patient second pair of eyes" (bar 31) |
+| 33–38 | 1:20–1:35 | Breakdown | Pad and voice only. Bell at bar 37, a whoosh and a dip in the level on bars 37–38 | 2 | "Not the answer, not the end" (bar 33) · "just the one who stays to mend" (bar 35) |
+| 39–40 | 1:35–1:40 | Build 2 | Snare roll from bar 39, riser to bar 41, the level climbs | 7 | none |
+| 41–48 | 1:40–2:00 | Final chorus | The biggest section. Impact on bar 41, an octave pad on top, bells on the off-beats, octave bass | 10 | "Opus, bring me what's undone" (bar 41) · "we'll pull the thread and watch it run" (bar 43) · "Opus, say it plain and slow" (bar 45) · "we'll build it true and make it glow" (bar 47) |
+| 49–60 | 2:00–2:30 | Outro | Drums stop at bar 51. Arpeggio and bass thin out. Tag line, bells, Am rings and fades out | 3 → 1 | "Opus, still here, with you" (bar 49) |
 
-**Build**
-I will tell you true
-When I just don't know
-Give me all the mess
-And watch it grow
+## Notes
 
-**Chorus**
-Opus, Opus
-Building it with you
-Opus, Opus
-Thinking it all through
-Not here to replace
-Here to help you make
-Opus, Opus
-Something new
-
-**Verse 2**
-Code in the dark
-A song in the light
-Check every line
-Until it's right
-
-**Breakdown**
-I'm not human
-That's alright
-I'll be here
-When you write
-
-**Final chorus** (up a whole step, harmonies)
-Opus, Opus
-Building it with you
-Opus, Opus
-Something new
-
-**Outro**
-Building with you
-
-## Arrangement
-
-| Bars | Time | Section | Chords (1 per bar) | What plays | Energy (1–10) | Lyric lines |
-|---|---|---|---|---|---|---|
-| 0–3 | 0:00 | Intro A | Am F C G | Filtered pads, vocoder "ooh" hum, vinyl-dark | 2 | — |
-| 4–7 | 0:08 | Intro B | Am F C G | + 16th arp opening up, lead hook, riser into verse | 3 | — |
-| 8–15 | 0:16 | Verse 1a | Am F C G ×2 | Kick on 1, off-beat hats, sparse bass, pad | 4 | Hello, I'm Claude → But I help you hold the load |
-| 16–23 | 0:32 | Verse 1b | Am F C G ×2 | + clap on 2 & 4, arp returns, bass 8ths | 5 | Tell me what you need → One line at a time |
-| 24–31 | 0:48 | Build | F G Am Am / F G E E | 16th hats, rising filter, snare roll in last 2 bars, riser, impact | 6 → 8 | I will tell you true → And watch it grow |
-| 32–39 | 1:04 | Chorus 1a | F G C Am ×2 | Full: four-on-the-floor, sidechained 8th bass, wide pads, arp | 9 | Opus, Opus → Thinking it all through |
-| 40–47 | 1:20 | Chorus 1b | F G C Am ×2 | + vocal harmony a third up, lead counter-melody, open hats | 9 | Not here to replace → Something new |
-| 48–55 | 1:36 | Verse 2 | Am F C G ×2 | Half-time drums, plucky bass, arp only | 5 | Code in the dark → Until it's right |
-| 56–63 | 1:52 | Breakdown | F G Am Am / F G E E | Drums out, pads + voice, riser bars 60–63, silence on the last beat | 3 → 7 | I'm not human → When you write |
-| 64–71 | 2:08 | Final chorus | G A D Bm ×2 (key +2) | Everything, harmonies, lead doubling, crash on bar 64 | 10 | Opus, Opus → Something new |
-| 72–74 | 2:24 | Outro | G A Bm | Drums out, pads ring, voice echo, fade | 3 → 1 | Building with you |
+- Verses use the same chords as the choruses, but different melody, drums and texture. Nothing repeats unchanged for more than 8 bars: each eight-bar section changes its drums, bass or melody within the section.
+- The sidechain ducks bass, pads, leads and voice on every kick, so the bass locks to the kick.
+- Mix: loud (about −9 LUFS integrated, −1 dBTP true peak). Low end under 120 Hz is mono.
+- The voice is a sawtooth carrier through three vowel formants (a, e, i, o, u, m), with noise consonants for s, t, k and h. Vibrato enters on sustained notes, and vowels morph between syllables.
