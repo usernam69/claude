@@ -1,0 +1,14 @@
+{
+  "name": "opus-media-tools",
+  "version": "1.0.0",
+  "description": "Shared synth/motion libraries and render scripts for the four code-built pieces",
+  "scripts": {
+    "audio": "node render-audio.mjs"
+  },
+  "dependencies": {
+    "gsap": "3.12.5",
+    "hyperframes": "0.8.79",
+    "three": "0.169.0"
+  },
+  "private": true
+}

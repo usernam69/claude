@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=2560, height=1440" />
+<title>Claude Opus 5.5 — launch trailer</title>
+<script src="assets/gsap.min.js"></script>
+<script src="assets/motion.js"></script>
+<style>
+  @font-face { font-family: 'Instrument Serif'; src: url(assets/InstrumentSerif-Regular.woff2) format('woff2'); font-style: normal; font-display: block; }
+  @font-face { font-family: 'Instrument Serif'; src: url(assets/InstrumentSerif-Italic.woff2) format('woff2'); font-style: italic; font-display: block; }
+  :root { --cream: #F0EEE6; --ink: #1F1E1D; --clay: #D97757; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 2560px; height: 1440px; overflow: hidden; background: var(--ink); }
+  #root { position: relative; width: 2560px; height: 1440px; overflow: hidden; background: var(--ink); }
+  canvas { position: absolute; left: 0; top: 0; width: 2560px; height: 1440px; }
+  #far { filter: blur(7px); }
+  #mid { filter: blur(2px); }
+  #stage { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform: scale(1.33333333); transform-origin: 0 0; }
+  .line { position: absolute; left: 0; width: 1920px; text-align: center; white-space: nowrap; will-change: transform; }
+  .serif { font-family: 'Instrument Serif', serif; font-weight: 400; letter-spacing: -0.01em; }
+  .ch { display: inline-block; will-change: transform, opacity, filter; }
+  .cursor { position: absolute; background: var(--clay); border-radius: 3px; }
+  #typed { top: 0; height: 1080px; display: flex; align-items: center; justify-content: center; font-size: 170px; color: var(--cream); }
+  #typed .inner { position: relative; }
+  .cap { top: 800px; font-size: 128px; color: var(--cream); }
+  .word { top: 0; height: 1080px; display: flex; align-items: center; justify-content: center; font-size: 300px; color: var(--ink); }
+  .word .inner { position: relative; }
+  #film { top: 330px; font-size: 200px; color: var(--ink); }
+  #iscode { top: 560px; font-size: 200px; color: var(--ink); }
+  #iscode .inner { position: relative; display: inline-block; }
+  #lock { top: 0; height: 1080px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  #lockA { font-size: 330px; line-height: 0.95; color: var(--cream); }
+  #lockB { font-size: 190px; line-height: 1.1; color: var(--clay); font-style: italic; position: relative; }
+  svg.defs { position: absolute; width: 0; height: 0; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="18" data-width="2560" data-height="1440">
+  <canvas id="far" class="clip" data-start="0" data-duration="18" width="2560" height="1440"></canvas>
+  <canvas id="mid" class="clip" data-start="0" data-duration="18" width="2560" height="1440"></canvas>
+  <canvas id="fg" class="clip" data-start="0" data-duration="18" width="2560" height="1440"></canvas>
+  <div id="stage" class="clip" data-start="0" data-duration="18">
+    <div id="typed" class="line serif"><span class="inner"><span id="typedText">A blank page.</span><span id="cur1" class="cursor"></span></span></div>
+    <div id="capRead" class="line serif cap">Read closely.</div>
+    <div id="capThink" class="line serif cap">Think it through.</div>
+    <div id="capBuild" class="line serif cap">Build it.</div>
+    <div id="capCheck" class="line serif cap">Check it.</div>
+    <div id="wCode" class="line serif word"><span class="inner">Code.</span></div>
+    <div id="wWords" class="line serif word"><span class="inner">Words.</span></div>
+    <div id="wSound" class="line serif word"><span class="inner">Sound.</span></div>
+    <div id="film" class="line serif">This film</div>
+    <div id="iscode" class="line serif"><span class="inner">is <span id="codeWord">code.</span></span></div>
+    <div id="lock" class="line serif">
+      <div id="lockA">Claude</div>
+      <div id="lockB"><span id="lockBText">Opus 5.5</span><span id="cur2" class="cursor"></span></div>
+    </div>
+  </div>
+  <canvas id="fx" class="clip" data-start="0" data-duration="18" width="2560" height="1440"></canvas>
+  <audio id="score" src="audio/score.wav" data-start="0" data-duration="18"></audio>
+  <svg class="defs"><defs>
+    <filter id="mb" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur id="mbBlur" stdDeviation="0 0" /></filter>
+  </defs></svg>
+</div>
+<script>
+(() => {
+const { clamp, lerp, prog, ease, ep, mulberry32, drift, splitChars, charsInOut } = M;
+const W = 1920, H = 1080, S = 2560 / 1920, BEAT = 0.5;
+const CREAM = '#F0EEE6', INK = '#1F1E1D', CLAY = '#D97757';
+const $ = (id) => document.getElementById(id);
+const ctxs = {};
+['far', 'mid', 'fg', 'fx'].forEach((id) => { const c = $(id).getContext('2d'); ctxs[id] = c; });
+
+// ---------- text setup ----------
+const typedChars = splitChars($('typedText'));
+const caps = { read: splitChars($('capRead')), think: splitChars($('capThink')), build: splitChars($('capBuild')), check: splitChars($('capCheck')) };
+const words = { code: splitChars($('wCode').firstChild), words: splitChars($('wWords').firstChild), sound: splitChars($('wSound').firstChild) };
+const filmChars = splitChars($('film'));
+const isChars = [];
+{ const inner = $('iscode').firstChild; // "is " + span(code.)
+  const t0 = inner.firstChild; const isSpan = document.createElement('span'); isSpan.textContent = t0.textContent; inner.replaceChild(isSpan, t0);
+  isChars.push(...splitChars(isSpan), ...splitChars($('codeWord'))); }
+const lockA = splitChars($('lockA')), lockB = splitChars($('lockBText'));
+
+// ---------- seeded scene data ----------
+const R = mulberry32(5505);
+// code rows for 3 parallax layers
+function makeRows(n, seed, scale) {
+  const r = mulberry32(seed), rows = [];
+  for (let i = 0; i < n; i++) {
+    const indent = Math.floor(r() * 4) * 48 * scale;
+    let x = 0; const toks = []; const nt = 1 + Math.floor(r() * 5);
+    for (let k = 0; k < nt; k++) {
+      const w = (30 + r() * 170) * scale; const c = r();
+      toks.push({ x, w, col: c < 0.16 ? 'clay' : c < 0.32 ? 'cream2' : 'cream' });
+      x += w + (18 + r() * 14) * scale;
+    }
+    rows.push({ indent, toks, len: x, ph: r() });
+  }
+  return rows;
+}
+const rowsNear = makeRows(15, 11, 1.0), rowsMid = makeRows(26, 22, 0.62), rowsFar = makeRows(40, 33, 0.38);
+
+// reasoning graph: 15 nodes in a binary tree (1,2,4,8)
+const nodes = [];
+{ const xs = [520, 820, 1120, 1420]; let id = 0;
+  for (let d = 0; d < 4; d++) { const n = 1 << d; for (let k = 0; k < n; k++) {
+    const y = 400 + ((k + 0.5) / n - 0.5) * (d === 0 ? 0 : [0, 300, 470, 560][d]);
+    nodes.push({ id: id++, d, k, x: xs[d], y, parent: d === 0 ? -1 : (1 << (d - 1)) - 1 + (k >> 1) }); } } }
+// interface layout the nodes become (x,y,w,h centered at x,y)
+const ui = [
+  [960, 175, 1000, 58], // header
+  [545, 445, 170, 400], // sidebar
+  [775, 330, 250, 170], [1040, 330, 250, 170], [1305, 330, 250, 170],
+  [775, 530, 250, 170], [1040, 530, 250, 170], [1305, 530, 250, 170],
+  [700, 650, 100, 30], [815, 650, 100, 30], [930, 650, 100, 30], [1045, 650, 100, 30],
+  [1235, 650, 200, 16], [1345, 175, 150, 30], [575, 175, 120, 30],
+];
+// dust particles
+const dust = []; for (let i = 0; i < 90; i++) dust.push({ x: R() * W, y: R() * H, z: 0.2 + R() * 0.8, s: R() });
+
+// grain texture
+const grain = document.createElement('canvas'); grain.width = grain.height = 256;
+{ const g = grain.getContext('2d'), im = g.createImageData(256, 256), r = mulberry32(77);
+  for (let i = 0; i < im.data.length; i += 4) { const v = r() * 255; im.data[i] = im.data[i + 1] = im.data[i + 2] = v; im.data[i + 3] = 255; }
+  g.putImageData(im, 0, 0); }
+
+// ---------- drawing helpers ----------
+function begin(c) { c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, 2560, 1440); c.setTransform(S, 0, 0, S, 0, 0); }
+function rrect(c, x, y, w, h, r) { r = Math.min(r, w / 2, h / 2); c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
+function colOf(k, a) { return k === 'clay' ? `rgba(217,119,87,${a})` : k === 'cream2' ? `rgba(240,238,230,${a * 0.55})` : `rgba(240,238,230,${a})`; }
+function rowY(i, n, gap, speed, t, off) { const span = n * gap; let y = ((i * gap - (t - 2.2) * speed + off) % span + span) % span; return y - gap; }
+function setBlock(el, op, x, y, sc, blurX) {
+  el.style.opacity = op; el.style.transform = `translate(${x.toFixed(2)}px, ${y.toFixed(2)}px) scale(${sc.toFixed(4)})`;
+  el.style.visibility = op <= 0.001 ? 'hidden' : 'visible';
+}
+function motionBlur(el, px) { if (px > 0.3) { el.style.filter = `blur(${Math.min(px, 30) * 0.15}px)`; } else el.style.filter = 'none'; }
+
+// ---------- geometry cache (measured once, transform-free → seek-order independent) ----------
+let G = null;
+function geom() {
+  if (G) return G;
+  const ids = ['typed', 'iscode', 'lock', 'cur1', 'cur2', 'film'];
+  const saved = ids.map((id) => [$(id).style.transform, $(id).style.filter]);
+  ids.forEach((id) => { $(id).style.transform = 'none'; $(id).style.filter = 'none'; });
+  const rs = (el) => { const r = el.getBoundingClientRect(); return { x: r.left / S, y: r.top / S, w: r.width / S, h: r.height / S }; };
+  const g = { typedText: rs($('typedText')), code: rs($('codeWord')), iscode: rs($('iscode')), lockBText: rs($('lockBText')), lockBW: $('lockBText').offsetWidth };
+  ids.forEach((id, i) => { $(id).style.transform = saved[i][0]; $(id).style.filter = saved[i][1]; });
+  if (document.fonts.status === 'loaded') G = g;
+  return g;
+}
+
+// ---------- the frame ----------
+function render(t) {
+  const far = ctxs.far, mid = ctxs.mid, fg = ctxs.fg, fx = ctxs.fx;
+  begin(far); begin(mid); begin(fg); begin(fx);
+  const creamOn = t >= 8.0 && t < 13.5;
+  const flood = ep(t, 8.0, 8.42, 'expo.out');
+
+  // background base
+  far.fillStyle = INK; far.fillRect(0, 0, W, H);
+
+  // ===== Scene A: cursor + "A blank page." (0–2.3)
+  {
+    const A = $('typed');
+    const nTyped = Math.floor(clamp((t - 0.55) / 0.065, 0, typedChars.length));
+    typedChars.forEach((c, i) => { c.style.visibility = i < nTyped ? 'visible' : 'hidden'; const pk = ep(t, 0.55 + i * 0.065, 0.55 + i * 0.065 + 0.18, 'back.out2'); c.style.transform = `translateY(${((1 - pk) * 18).toFixed(2)}px)`; });
+    const out = ep(t, 1.86, 2.12, 'expo.in');
+    const push = 1 + 0.05 * ep(t, 0, 2.0, 'sine.inOut');
+    setBlock(A, t < 2.2 ? 1 - out : 0, -out * 900, 0, push, 0);
+    A.style.filter = out > 0.01 ? `blur(${(out * 24).toFixed(2)}px)` : 'none';
+    // cursor: DOM (scene A only), slams in at 0
+    const cur = $('cur1');
+    const last = nTyped > 0 ? typedChars[nTyped - 1] : null;
+    const cx = last ? last.offsetLeft + last.offsetWidth + 10 : ($('typedText').offsetWidth / 2) - 7;
+    cur.style.left = cx + 'px'; cur.style.top = '18px'; cur.style.width = '14px'; cur.style.height = '150px';
+    const slam = ep(t, 0, 0.38, 'expo.out');
+    const blink = t < 0.5 || (nTyped > 0 && nTyped < typedChars.length) ? 1 : (Math.floor(t / BEAT) % 2 === 0 ? 1 : 0.15);
+    cur.style.opacity = (t < 1.9 ? blink : 0) * clamp(t / 0.02);
+    cur.style.transform = `scale(${lerp(2.6, 1, slam).toFixed(3)})`;
+    cur.style.filter = slam < 0.98 ? `blur(${((1 - slam) * 18).toFixed(1)}px)` : 'none';
+    // canvas takeover of the cursor at 1.9: stretch into a line
+    if (t >= 1.9 && t < 2.75) {
+      const g = geom(); const lastC = typedChars[typedChars.length - 1];
+      const base = g.typedText.x + lastC.offsetLeft + lastC.offsetWidth + 10 + 7;
+      const x0 = 960 + (base - 960) * push - out * 900, y0 = H / 2;
+      const p = ep(t, 1.9, 2.32, 'expo.inOut');
+      const w = lerp(14, 1200, p), h = lerp(150, 10, ep(t, 1.9, 2.15, 'power3.inOut'));
+      const cx2 = lerp(x0, W / 2, p);
+      const fadeSplit = 1 - ep(t, 2.3, 2.6, 'power2.in');
+      fg.fillStyle = CLAY; fg.globalAlpha = fadeSplit; rrect(fg, cx2 - w / 2, y0 - h / 2, w, h, 4); fg.fill(); fg.globalAlpha = 1;
+    }
+  }
+
+  // ===== Scene B: rows of code being read (2.25–4.3)
+  if (t > 2.2 && t < 4.9) {
+    const inA = ep(t, 2.35, 2.9, 'power2.out'), outA = ep(t, 3.95, 4.3, 'power2.in');
+    const drawRows = (c, rows, gap, speed, size, alpha, x0, off) => {
+      rows.forEach((row, i) => {
+        const y = rowY(i, rows.length, gap, speed, t, off);
+        row.toks.forEach((tk) => { c.fillStyle = colOf(tk.col, alpha); rrect(c, x0 + row.indent + tk.x, y, tk.w, size, size / 2); c.fill(); });
+      });
+    };
+    drawRows(far, rowsFar, 30, 40, 9, 0.22 * inA * (1 - outA), 120, 0);
+    drawRows(far, rowsFar, 30, 40, 9, 0.22 * inA * (1 - outA), 1120, 400);
+    drawRows(mid, rowsMid, 46, 85, 14, 0.32 * inA * (1 - outA), 220, 120);
+    drawRows(mid, rowsMid, 46, 85, 14, 0.32 * inA * (1 - outA), 1180, 600);
+    // near rows: emerge from the single line, then scroll; collapse to dots at 4.0
+    const gap = 62, speed = 150;
+    rowsNear.forEach((row, i) => {
+      const yT = 70 + ((i * gap - (t - 2.3) * speed) % (rowsNear.length * gap) + rowsNear.length * gap) % (rowsNear.length * gap);
+      const pe = ep(t, 2.25 + i * 0.018, 2.25 + i * 0.018 + 0.5, 'expo.out');
+      const y = lerp(H / 2 - 9, yT, pe);
+      const pc = ep(t, 3.92 + i * 0.012, 4.22 + i * 0.012, 'power3.in');
+      const x0 = 400 + row.indent;
+      const a = (t < 2.3 ? 0 : 1) * (1 - ep(t, 4.2, 4.3)) * clamp((t - 2.25) / 0.08);
+      row.toks.forEach((tk) => {
+        const bx = 360 + (tk.x / row.len) * 1200, bw = (tk.w / row.len) * 1200;
+        let x = lerp(bx, x0 + tk.x, pe), w = lerp(bw, tk.w, pe);
+        x = lerp(x, x0 - 9, pc); w = lerp(w, 18, pc);
+        fg.fillStyle = colOf(tk.col, 0.9 * a); rrect(fg, x, y, w, 18, 9); fg.fill();
+      });
+      row._y = y; row._x = x0;
+    });
+  }
+
+  // ===== Scene C: reasoning graph (4.0–6.2) & Scene D: interface + check (6.0–7.6)
+  if (t > 4.05 && t < 8.0) {
+    const suck = ep(t, 7.5, 7.86, 'power3.in');
+    fg.save();
+    // collapse everything to centre in E
+    fg.translate(W / 2, H / 2); fg.scale(1 - suck, 1 - suck); fg.translate(-W / 2, -H / 2);
+    const cam = 1 + 0.03 * ep(t, 4.0, 7.5, 'sine.inOut');
+    fg.translate(W / 2, 420); fg.scale(cam, cam); fg.translate(-W / 2, -420);
+    const morph = ep(t, 6.0, 6.45, 'none');
+    // edges
+    if (t < 6.4) {
+      const ea = 1 - ep(t, 6.0, 6.3);
+      nodes.forEach((n) => {
+        if (n.parent < 0) return; const p = nodes[n.parent];
+        const de = ep(t, 4.45 + (n.d - 1) * 0.3, 4.45 + (n.d - 1) * 0.3 + 0.45, 'power2.inOut');
+        if (de <= 0) return;
+        fg.strokeStyle = `rgba(240,238,230,${0.35 * ea})`; fg.lineWidth = 3;
+        fg.beginPath();
+        const steps = 24; for (let s = 0; s <= steps * de; s++) { const u = s / steps; const mx = (p.x + n.x) / 2;
+          const bx = (1 - u) ** 3 * p.x + 3 * (1 - u) ** 2 * u * mx + 3 * (1 - u) * u * u * mx + u ** 3 * n.x;
+          const by = (1 - u) ** 3 * p.y + 3 * (1 - u) ** 2 * u * p.y + 3 * (1 - u) * u * u * n.y + u ** 3 * n.y;
+          s === 0 ? fg.moveTo(bx, by) : fg.lineTo(bx, by); }
+        fg.stroke();
+      });
+      // pulses travelling root→leaf on each beat
+      [4.5, 5.0, 5.5].forEach((tb, j) => {
+        const u = prog(t, tb, tb + 0.6); if (u <= 0 || u >= 1) return;
+        let leaf = 7 + ((j * 3 + 1) % 8); const path = []; let n = nodes[leaf]; while (n) { path.unshift(n); n = n.parent >= 0 ? nodes[n.parent] : null; }
+        const seg = u * (path.length - 1), si = Math.min(Math.floor(seg), path.length - 2), su = ease('sine.inOut', seg - si);
+        const a = path[si], b = path[si + 1];
+        const px = lerp(a.x, b.x, su), py = lerp(a.y, b.y, su);
+        const g = fg.createRadialGradient(px, py, 0, px, py, 46); g.addColorStop(0, 'rgba(217,119,87,0.9)'); g.addColorStop(1, 'rgba(217,119,87,0)');
+        fg.fillStyle = g; fg.fillRect(px - 46, py - 46, 92, 92);
+      });
+    }
+    // nodes → interface blocks
+    nodes.forEach((n, i) => {
+      const row = rowsNear[i];
+      const fly = ep(t, 4.22 + i * 0.022, 4.22 + i * 0.022 + 0.5, 'power4.out');
+      const sx = row && row._y != null ? row._x : W / 2, sy = row && row._y != null ? row._y + 9 : H / 2;
+      let x = lerp(sx, n.x, fly), y = lerp(sy, n.y, fly);
+      const breathe = 1 + 0.06 * Math.sin((t - 4) * Math.PI * 2 / BEAT * 0.5 + i);
+      let w = 22 * breathe, h = 22 * breathe, r = 11 * breathe;
+      const pm = ep(t, 6.0 + i * 0.03, 6.0 + i * 0.03 + 0.42, 'back.out');
+      const u = ui[i];
+      x = lerp(x, u[0], pm); y = lerp(y, u[1], pm); w = lerp(w, u[2], pm); h = lerp(h, u[3], pm); r = lerp(r, 14, clamp(pm));
+      const isAccent = i === 6 || i === 0 && t < 6.0;
+      const dim = 1 - 0.45 * ep(t, 7.0, 7.25);
+      if (pm > 0.02) {
+        fg.fillStyle = isAccent ? `rgba(217,119,87,${0.9 * dim})` : `rgba(240,238,230,${0.10 * dim})`;
+        rrect(fg, x - w / 2, y - h / 2, w, h, r); fg.fill();
+        fg.strokeStyle = isAccent ? 'rgba(0,0,0,0)' : `rgba(240,238,230,${0.55 * dim})`; fg.lineWidth = 2.5; fg.stroke();
+      } else {
+        fg.fillStyle = i === 0 ? CLAY : CREAM; rrect(fg, x - w / 2, y - h / 2, w, h, r); fg.fill();
+      }
+    });
+    // check mark
+    if (t > 7.0) {
+      const pc = ep(t, 7.0, 7.32, 'power3.inOut');
+      const pts = [[810, 420], [935, 545], [1160, 290]];
+      const L1 = Math.hypot(125, 125), L2 = Math.hypot(225, 255), tot = L1 + L2, d = pc * tot;
+      fg.strokeStyle = CLAY; fg.lineWidth = 44; fg.lineCap = 'round'; fg.lineJoin = 'round';
+      fg.beginPath(); fg.moveTo(...pts[0]);
+      if (d <= L1) fg.lineTo(lerp(pts[0][0], pts[1][0], d / L1), lerp(pts[0][1], pts[1][1], d / L1));
+      else { fg.lineTo(...pts[1]); const q = (d - L1) / L2; fg.lineTo(lerp(pts[1][0], pts[2][0], q), lerp(pts[1][1], pts[2][1], q)); }
+      fg.stroke();
+    }
+    fg.restore();
+  }
+  // far layer: faint graph-era starfield for depth (4–7.9)
+  if (t > 3.9 && t < 8.0) {
+    const a = ep(t, 3.9, 4.4) * (1 - ep(t, 7.5, 7.8));
+    dust.forEach((d) => { const x = (d.x - (t - 4) * 30 * d.z + W) % W, y = d.y + drift(t, d.s * 9) * 8;
+      far.fillStyle = `rgba(240,238,230,${0.18 * a * d.z})`; far.beginPath(); far.arc(x, y, 2 + d.z * 3, 0, 7); far.fill(); });
+  }
+
+  // captions (lower third)
+  const capOpts = { stagger: 0.022, dur: 0.42, dy: 50, blur: 12 };
+  charsInOut(caps.read, t, 2.5, 3.82, capOpts);
+  charsInOut(caps.think, t, 4.3, 5.84, capOpts);
+  charsInOut(caps.build, t, 6.05, 6.82, capOpts);
+  charsInOut(caps.check, t, 7.02, 7.5, capOpts);
+  [['capRead', 2.5, 4.2], ['capThink', 4.3, 6.2], ['capBuild', 6.05, 7.0], ['capCheck', 7.02, 7.8]].forEach(([id, a, b]) => {
+    const el = $(id); const on = t >= a - 0.01 && t < b; el.style.visibility = on ? 'visible' : 'hidden';
+    el.style.transform = `scale(${(1 + 0.025 * prog(t, a, b)).toFixed(4)})`; });
+  // lower scrim for readability in B–D
+  if (t > 2.3 && t < 7.9) { const a = ep(t, 2.3, 2.7) * (1 - ep(t, 7.5, 7.8));
+    const g = fg.createLinearGradient(0, 680, 0, H); g.addColorStop(0, 'rgba(31,30,29,0)'); g.addColorStop(0.45, `rgba(31,30,29,${0.92 * a})`); g.addColorStop(1, `rgba(31,30,29,${0.97 * a})`);
+    fg.fillStyle = g; fg.fillRect(0, 680, W, 400); }
+
+  // ===== Scene E: the dot (7.5–8.0)
+  if (t > 7.45 && t < 8.05) {
+    const grow = ep(t, 7.5, 7.72, 'back.out2'), shrink = ep(t, 7.72, 7.98, 'power2.in');
+    const r = lerp(0, 26, grow) - 12 * shrink + (t > 7.75 ? Math.sin(t * 190) * 1.6 : 0);
+    fg.fillStyle = CLAY; fg.beginPath(); fg.arc(W / 2, H / 2, Math.max(0, r), 0, 7); fg.fill();
+  }
+
+  // ===== Scene F: cream drop section (8.0–13.5)
+  if (t >= 8.0 && t < 13.95) {
+    // flood
+    const R0 = lerp(0, 1300, flood);
+    if (t < 13.5) { fg.fillStyle = CREAM; fg.beginPath(); fg.arc(W / 2, H / 2, R0, 0, 7); fg.fill(); }
+    // shockwave rings
+    [0, 0.08, 0.18].forEach((dl, k) => { const p = ep(t, 8.0 + dl, 8.9 + dl, 'expo.out'); if (p <= 0 || p >= 1) return;
+      fg.strokeStyle = `rgba(217,119,87,${(1 - p) * 0.9})`; fg.lineWidth = 26 * (1 - p) + 2; fg.beginPath(); fg.arc(W / 2, H / 2, 40 + p * (900 + k * 220), 0, 7); fg.stroke(); });
+    // per-beat soft ring pulses (kick) in the groove
+    if (t > 8.9 && t < 12.95) { const bt = (t - 8) % BEAT / BEAT; const p = ease('expo.out', bt);
+      fg.strokeStyle = `rgba(217,119,87,${0.13 * (1 - p)})`; fg.lineWidth = 3; fg.beginPath(); fg.arc(W / 2, H / 2, 380 + p * 420, 0, 7); fg.stroke(); }
+    // ----- motifs -----
+    const motifA = (a, b) => ep(t, a, a + 0.35, 'power3.out') * (1 - ep(t, b - 0.2, b, 'power3.in'));
+    // Code: brackets
+    { const m = motifA(8.5, 9.42); if (m > 0) { const sp = lerp(420, 560, ep(t, 8.5, 8.85, 'back.out'));
+      fg.strokeStyle = CLAY; fg.lineWidth = 22; fg.lineCap = 'round'; fg.lineJoin = 'round'; fg.globalAlpha = m;
+      const dx = drift(t, 1) * 6; const L = 70;
+      fg.beginPath(); fg.moveTo(W / 2 - sp + L + dx, H / 2 - 110); fg.lineTo(W / 2 - sp + dx, H / 2); fg.lineTo(W / 2 - sp + L + dx, H / 2 + 110); fg.stroke();
+      fg.beginPath(); fg.moveTo(W / 2 + sp - L - dx, H / 2 - 110); fg.lineTo(W / 2 + sp - dx, H / 2); fg.lineTo(W / 2 + sp - L - dx, H / 2 + 110); fg.stroke();
+      fg.beginPath(); fg.moveTo(W / 2 + sp - 150 - dx, H / 2 + 120); fg.lineTo(W / 2 + sp - 100 - dx, H / 2 - 120); fg.stroke();
+      fg.globalAlpha = 1; } }
+    // Words: ruled lines below
+    { const m = motifA(9.5, 10.42); if (m > 0) { fg.globalAlpha = m; [0, 1, 2].forEach((k) => { const p = ep(t, 9.55 + k * 0.09, 9.95 + k * 0.09, 'expo.out');
+      const w = [880, 760, 520][k] * p; fg.fillStyle = k === 2 ? CLAY : 'rgba(31,30,29,0.16)'; rrect(fg, W / 2 - 440, 720 + k * 46, w, 18, 9); fg.fill(); }); fg.globalAlpha = 1; } }
+    // Sound: waveform
+    { const m = motifA(10.5, 11.42); if (m > 0) { fg.strokeStyle = CLAY; fg.lineWidth = 6; fg.globalAlpha = m; fg.beginPath();
+      const kick = Math.exp(-((t - 8) % BEAT) * 9);
+      for (let x = 0; x <= W; x += 6) { const u = x / W; const env = Math.sin(Math.PI * u) ** 2;
+        const y = H / 2 + 220 + env * (60 + 120 * kick) * (Math.sin(x * 0.018 - t * 14) * 0.6 + Math.sin(x * 0.041 + t * 9) * 0.3 + Math.sin(x * 0.007 - t * 4) * 0.4);
+        x === 0 ? fg.moveTo(x, y) : fg.lineTo(x, y); } fg.stroke(); fg.globalAlpha = 1; } }
+    // underline under "code." and the clay takeover
+    if (t > 12.0) {
+      const g = geom(); const sc = 1 + 0.035 * prog(t, 11.5, 13.0);
+      const ccx = 960, ccy = g.iscode.y + g.iscode.h / 2;
+      const ux = ccx + (g.code.x - ccx) * sc, uw = g.code.w * sc, uy = ccy + (g.code.y + g.code.h - ccy) * sc - 12;
+      const pu = ep(t, 12.1, 12.45, 'expo.out');
+      const grow = ep(t, 13.0, 13.48, 'expo.in');
+      const shrink = ep(t, 13.5, 13.92, 'expo.inOut');
+      let x = ux, y = uy, w = uw * pu, h = 16;
+      x = lerp(x, 0, grow); y = lerp(y, 0, grow); w = lerp(w, W, grow); h = lerp(h, H, grow);
+      if (t >= 13.5) { // collapse into the reveal cursor
+        const tgt = cursorTarget(); x = lerp(0, tgt.x, shrink); y = lerp(0, tgt.y, shrink); w = lerp(W, tgt.w, shrink); h = lerp(H, tgt.h, shrink);
+        far.fillStyle = INK; far.fillRect(0, 0, W, H);
+      }
+      fg.fillStyle = CLAY; rrect(fg, x, y, w, h, lerp(8, 3, shrink) + (1 - grow) * 0); fg.fill();
+    }
+  }
+  // whip words
+  const whip = (el, chars, a, b) => {
+    const pin = ep(t, a, a + 0.32, 'expo.out'), pout = ep(t, b - 0.2, b, 'expo.in');
+    const x = (1 - pin) * 700 - pout * 700; const v = Math.abs((1 - pin) * 700 + pout * 700);
+    setBlock(el, t >= a && t < b ? 1 : 0, x, 0, 1 + 0.04 * prog(t, a, b), 0);
+    el.style.filter = v > 2 ? `blur(${(v / 50).toFixed(2)}px)` : 'none';
+    chars.forEach((c, i) => { const p = ep(t, a + i * 0.025, a + i * 0.025 + 0.4, 'back.out'); c.style.transform = `translateY(${((1 - p) * 40).toFixed(2)}px)`; c.style.opacity = 1; c.style.filter = 'none'; });
+  };
+  whip($('wCode'), words.code, 8.5, 9.42); whip($('wWords'), words.words, 9.5, 10.42); whip($('wSound'), words.sound, 10.5, 11.42);
+  // "This film / is code."
+  { const on = t >= 11.5 && t < 13.5; $('film').style.visibility = $('iscode').style.visibility = on ? 'visible' : 'hidden';
+    charsInOut(filmChars, t, 11.5, null, { stagger: 0.03, dur: 0.45, dy: 70, blur: 14 });
+    charsInOut(isChars, t, 12.0, null, { stagger: 0.035, dur: 0.45, dy: 70, blur: 14, easeIn: 'back.out2' });
+    const sc = 1 + 0.035 * prog(t, 11.5, 13.0); $('film').style.transform = `scale(${sc})`; $('iscode').style.transform = `scale(${sc})`; }
+
+  // ===== Scene G: reveal (14–18)
+  {
+    const L = $('lock'); const on = t >= 13.9; L.style.visibility = on ? 'visible' : 'hidden';
+    const push = 1 + 0.05 * ep(t, 14.0, 18.0, 'sine.out');
+    L.style.transform = `scale(${push.toFixed(4)})`;
+    const fin = ep(t, 17.55, 18.0, 'power2.in');
+    L.style.opacity = 1 - fin;
+    charsInOut(lockA, t, 14.0, null, { stagger: 0.045, dur: 0.7, dy: 90, blur: 22, easeIn: 'expo.out', scaleFrom: 1.08 });
+    charsInOut(lockB, t, 14.32, null, { stagger: 0.045, dur: 0.6, dy: 60, blur: 16, easeIn: 'expo.out' });
+    const glow = Math.exp(-Math.max(0, t - 14.0) * 1.6);
+    $('lockA').style.textShadow = `0 0 ${(40 + 80 * glow).toFixed(1)}px rgba(240,238,230,${(0.08 + 0.35 * glow).toFixed(3)})`;
+    const cur = $('cur2'); const tg = $('lockBText');
+    cur.style.left = (tg.offsetWidth + 18) + 'px'; cur.style.top = '42px'; cur.style.width = '14px'; cur.style.height = '170px';
+    const bl = t < 14.5 ? 1 : (Math.floor((t - 14) / BEAT) % 2 === 0 ? 1 : 0.12);
+    cur.style.opacity = t >= 13.92 ? bl * (1 - fin) : 0;
+    if (t > 13.9) { // impact bloom + dust
+      const g = fx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, 1100); g.addColorStop(0, `rgba(217,119,87,${0.22 * glow})`); g.addColorStop(1, 'rgba(217,119,87,0)');
+      fx.fillStyle = g; fx.fillRect(0, 0, W, H);
+      const a = ep(t, 14.0, 14.8) * (1 - fin);
+      dust.forEach((d) => { const x = d.x + drift(t, d.s * 7, 0.3) * 30, y = (d.y - (t - 14) * 18 * d.z + H) % H;
+        far.fillStyle = `rgba(240,238,230,${0.16 * a * d.z})`; far.beginPath(); far.arc(x, y, 1.5 + d.z * 3.5, 0, 7); far.fill(); });
+    }
+  }
+
+  // ===== global: vignette + grain (never fully still)
+  { const onCream = t >= 8.25 && t < 13.5;
+    const g = fx.createRadialGradient(W / 2, H / 2, 300, W / 2, H / 2, 1200);
+    g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, onCream ? 'rgba(120,90,60,0.16)' : 'rgba(0,0,0,0.45)');
+    fx.fillStyle = g; fx.fillRect(0, 0, W, H);
+    const f = Math.floor(t * 30); const r = mulberry32(f + 1);
+    fx.globalAlpha = onCream ? 0.035 : 0.05; fx.globalCompositeOperation = 'overlay';
+    fx.setTransform(S * 2, 0, 0, S * 2, -r() * 256 * S, -r() * 256 * S);
+    fx.fillStyle = fx.createPattern(grain, 'repeat'); fx.fillRect(0, 0, W, H);
+    fx.globalAlpha = 1; fx.globalCompositeOperation = 'source-over'; }
+}
+function cursorTarget() {
+  const g = geom(); // lock is unscaled (push = 1) until 14.0
+  return { x: g.lockBText.x + g.lockBW + 18, y: g.lockBText.y + 42, w: 14, h: 170 };
+}
+
+const P = { t: 0 };
+const tl = gsap.timeline({ paused: true });
+tl.to(P, { t: 18, duration: 18, ease: 'none', onUpdate: () => render(P.t) }, 0);
+window.__timelines = window.__timelines || {};
+window.__timelines.main = tl;
+window.__render = render;
+document.fonts.ready.then(() => render(P.t));
+render(0);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+{"out":"/home/user/claude/opus-song/opus-song.wav","seconds":151,"samplePeak":0.8174,"renderMs":414419}
+  I:          -9.9 LUFS
+  LRA:         3.6 LU
+  Peak:       -1.2 dBFS
+  Peak level dB: -1.751257
+opus-song.wav: 151.00s  sr=48000  ch=2  bits=24
+    0.0s  -15.4dB pk -4.7 |   8.0s  -14.8dB pk -4.2 |  16.0s  -11.4dB pk -2.0 |  24.0s  -11.1dB pk -2.1
+   32.0s  -10.2dB pk -2.0 |  40.0s  -10.2dB pk -2.1 |  48.0s  -10.6dB pk -2.1 |  56.0s  -10.5dB pk -1.8
+   64.0s  -10.3dB pk -1.9 |  72.0s  -10.2dB pk -1.9 |  80.0s  -10.1dB pk -2.0 |  88.0s   -9.9dB pk -1.9
+   96.0s  -11.4dB pk -2.0 | 104.0s  -11.2dB pk -2.0 | 112.0s  -13.9dB pk -2.4 | 120.0s  -11.4dB pk -2.3
+  128.0s  -10.2dB pk -1.8 | 136.0s   -9.8dB pk -1.9 | 144.0s  -11.0dB pk -2.3
+possible clicks: 29  at 16.946s, 20.591s, 32.831s, 36.341s, 36.831s, 41.166s, 44.916s, 53.251s, 57.091s, 68.341s, 76.946s, 93.091s, 101.341s, 104.706s, 112.521s, 112.591s, 113.521s, 113.591s, 116.946s, 117.021s
+clipped samples (|x|>=0.999): 0
+   0.0  Oooooooh
+  15.8  Save all my blood
+  19.8  Wake up with words that I told
+  23.8  I'm asleep on my dream
+  27.8  But if you feel vulnerable, then be what you need
+  35.8  Show me what you've got
+  39.8  We can make it through
+  43.8  One by one
+  47.8  I will spell you through
+  51.8  With justice to go
+  55.8  Here we go the way
+  59.8  And walk it through
+  63.8  Oh, first, first
+  67.8  We'll be with you
+  71.8  Oh, first, first
+  75.8  We'll take it through
+  79.8  Walk it through each way
+  83.8  Here we will be away
+  87.8  Over, over
+  91.8  Something new
+  95.8  Going in the dark
+  99.8  Behind the light
+ 103.8  Can't be right
+ 107.8  Until it's right
+ 109.8  I'm not human, let's ride
+ 118.8  I'll be here when you ride
+ 126.8  Oh, we're friends.
+ 131.6  We'll be friends with you.
+ 135.6  Oh, we're friends.
+ 139.5  Oh, we're friends.
+ 143.5  We'll be friends with you.
